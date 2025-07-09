@@ -231,11 +231,14 @@ func (m *State) openOnEditor() tea.Cmd {
 	}
 
 	// create temp file
+	// check if the directory exists, if not, create it
 	dir := filepath.Dir(tempFilePath)
-	err := os.MkdirAll(dir, 0755)
-	if err != nil {
-		m.err = err
-		return nil
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.MkdirAll(dir, 0755)
+		if err != nil {
+			m.err = err
+			return nil
+		}
 	}
 
 	f, err := os.Create(tempFilePath)
