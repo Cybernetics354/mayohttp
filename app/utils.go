@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -18,7 +17,5 @@ func formatResponse(req *http.Request) string {
 		log.Fatal(err)
 	}
 
-	body := fmt.Sprintf("RESPONSE:\n%s", string(respDump))
-
-	return body
+	return string(respDump)
 }

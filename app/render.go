@@ -18,7 +18,7 @@ func (m *State) RecalculateComponentSize() {
 func (m *State) Render() string {
 	var str string
 	switch m.state {
-	case FOCUS_URL, FOCUS_PIPE:
+	case FOCUS_URL, FOCUS_PIPE, FOCUS_PIPEDRESP:
 		str = fmt.Sprintf(
 			"%s\n%s\n%s\n%s",
 			m.RenderURL(),
@@ -27,12 +27,6 @@ func (m *State) Render() string {
 			m.RenderHelp(),
 		)
 		break
-	case FOCUS_PIPEDRESP:
-		str = fmt.Sprintf(
-			"%s\n%s",
-			m.RenderPipedResponse(),
-			m.RenderHelp(),
-		)
 	case COMMAND_PALLETE:
 		str = fmt.Sprintf(
 			"%s",

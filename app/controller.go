@@ -2,9 +2,13 @@ package app
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -88,6 +92,8 @@ func (m *State) onKeyPressed(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch {
+	case key.Matches(msg, mapped.Open):
+		return m, m.openOnEditor()
 	case key.Matches(msg, mapped.Quit):
 		m.handleQuit()
 		if m.quitting {
@@ -123,6 +129,8 @@ func (m *State) onKeyPressed(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.url, cmd = m.url.Update(msg)
 	case FOCUS_RESPONSE:
 		m.response, cmd = m.response.Update(msg)
+	case FOCUS_PIPEDRESP:
+		m.pipedresp, cmd = m.pipedresp.Update(msg)
 	case COMMAND_PALLETE:
 		m.commands, cmd = m.commands.Update(msg)
 	}
@@ -207,4 +215,69 @@ func (m *State) setupState() {
 	case COMMAND_PALLETE:
 		m.commands.FilterInput.Focus()
 	}
+}
+
+func (m *State) openOnEditor() tea.Cmd {
+	var str string
+	switch m.state {
+	case FOCUS_URL:
+		str = m.url.Value()
+	case FOCUS_PIPE:
+		str = m.pipe.Value()
+	case FOCUS_PIPEDRESP:
+		str = m.pipedresp.Value()
+	default:
+		return nil
+	}
+
+	// create temp file
+	dir := filepath.Dir(tempFilePath)
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		m.err = err
+		return nil
+	}
+
+	f, err := os.Create(tempFilePath)
+	if err != nil {
+		m.err = err
+		return nil
+	}
+
+	f.WriteString(str)
+	f.Close()
+
+	// open temp file on default editor
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vi"
+	}
+
+	cmd := exec.Command(editor, tempFilePath)
+	return tea.ExecProcess(cmd, func(err error) tea.Msg {
+		// read the temp file
+		f, err := os.Open(tempFilePath)
+		if err != nil {
+			return errMsg(err)
+		}
+
+		defer f.Close()
+		b, err := io.ReadAll(f)
+		if err != nil {
+			return errMsg(err)
+		}
+
+		str := strings.TrimSpace(string(b))
+
+		switch m.state {
+		case FOCUS_URL:
+			m.url.SetValue(str)
+		case FOCUS_PIPE:
+			m.pipe.SetValue(str)
+		case FOCUS_PIPEDRESP:
+			m.pipedresp.SetValue(str)
+		}
+
+		return errMsg(err)
+	})
 }
