@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -9,6 +10,13 @@ import (
 )
 
 func main() {
+	envPtr := flag.String("e", ".env", "Path to the environment file")
+	flag.Parse()
+
+	if envPtr != nil && len(*envPtr) >= 0 {
+		app.EnvFilePath = *envPtr
+	}
+
 	p := tea.NewProgram(app.InitialModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Println(err)

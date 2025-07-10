@@ -9,6 +9,10 @@ const (
 	EDIT_HEADER     = "edit_header"
 	COMMAND_PALLETE = "command_pallete"
 
+	COMMAND_OPEN_ENV    = "command_open_env"
+	COMMAND_OPEN_BODY   = "command_open_body"
+	COMMAND_OPEN_HEADER = "command_open_header"
+
 	REQUEST_METHOD_GET     = "GET"
 	REQUEST_METHOD_POST    = "POST"
 	REQUEST_METHOD_PUT     = "PUT"

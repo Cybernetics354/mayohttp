@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"os"
 )
 
 func formatResponse(req *http.Request) string {
@@ -20,4 +21,13 @@ func formatResponse(req *http.Request) string {
 	}
 
 	return string(respDump)
+}
+
+func getDefaultEditor() string {
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vi"
+	}
+
+	return editor
 }

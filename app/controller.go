@@ -135,7 +135,11 @@ func (m *State) RunPipe() {
 			return
 		}
 
-		command := exec.Command("bash", "-c", fmt.Sprintf("echo '%s' | %s", resp, pipe))
+		command := exec.Command(
+			"bash",
+			"-c",
+			fmt.Sprintf("export $(cat '%s' | xargs) && echo '%s' | %s", EnvFilePath, resp, pipe),
+		)
 		output, err := command.CombinedOutput()
 		if err != nil {
 			m.pipeResSub <- requestPipeResponse{
@@ -218,6 +222,10 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.state == FOCUS_PIPE {
 			m.RunPipe()
 			return m, nil
+		}
+
+		if m.state == COMMAND_PALLETE {
+			return m, m.SelectCommandPallete()
 		}
 	}
 
@@ -333,10 +341,7 @@ func (m *State) OpenOnEditor() tea.Cmd {
 	f.WriteString(str)
 	f.Close()
 
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = "vi"
-	}
+	editor := getDefaultEditor()
 
 	cmd := exec.Command(editor, tempFilePath)
 	return tea.ExecProcess(cmd, func(err error) tea.Msg {
@@ -370,4 +375,23 @@ func (m *State) ShowSpinner() {
 
 func (m *State) HideSpinner() {
 	m.showSpinner = false
+}
+
+func (m *State) SelectCommandPallete() tea.Cmd {
+	i, ok := m.commands.SelectedItem().(commandPallete)
+	if !ok {
+		return nil
+	}
+
+	m.SetState(i.state)
+
+	if i.commandId != COMMAND_OPEN_ENV {
+		return nil
+	}
+
+	editor := getDefaultEditor()
+	cmd := exec.Command(editor, EnvFilePath)
+	return tea.ExecProcess(cmd, func(err error) tea.Msg {
+		return errMsg(err)
+	})
 }
