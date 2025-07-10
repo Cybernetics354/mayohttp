@@ -18,20 +18,21 @@ func (m *State) RecalculateComponentSize() {
 func (m *State) Render() string {
 	var str string
 	switch m.state {
-	case FOCUS_URL, FOCUS_PIPE, FOCUS_PIPEDRESP:
-		str = fmt.Sprintf(
-			"%s\n%s\n%s\n%s",
-			m.RenderURL(),
-			m.RenderPipe(),
-			m.RenderPipedResponse(),
-			m.RenderHelp(),
-		)
-		break
 	case COMMAND_PALLETE:
 		str = fmt.Sprintf(
 			"%s",
 			m.commands.View(),
 		)
+	default:
+		str = fmt.Sprintf(
+			"%s\n%s\n%s\n%s%s",
+			m.RenderURL(),
+			m.RenderPipe(),
+			m.RenderPipedResponse(),
+			m.RenderSpinner(),
+			m.RenderHelp(),
+		)
+		break
 	}
 
 	return appStyle.Render(str)
@@ -67,4 +68,12 @@ func (m *State) RenderResponse() string {
 
 func (m *State) RenderPipedResponse() string {
 	return m.pipedresp.View()
+}
+
+func (m *State) RenderSpinner() string {
+	if !m.showSpinner {
+		return ""
+	}
+
+	return fmt.Sprintf("%s ", m.spinner.View())
 }

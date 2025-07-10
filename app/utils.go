@@ -1,7 +1,7 @@
 package app
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 )
@@ -9,12 +9,14 @@ import (
 func formatResponse(req *http.Request) string {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Sprintf("Request error : %s", err.Error())
 	}
+
+	defer resp.Body.Close()
 
 	respDump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Sprintf("Response dump error : %s", err.Error())
 	}
 
 	return string(respDump)

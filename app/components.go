@@ -68,6 +68,8 @@ func createResponseTextarea() textarea.Model {
 	i.Prompt = ""
 	i.FocusedStyle.Base = focusTextarea
 	i.BlurredStyle.Base = blurTextarea
+	i.FocusedStyle.LineNumber = focusTextareaLineNumber
+	i.BlurredStyle.LineNumber = blurTextareaLineNumber
 	i.Blur()
 	return i
 }
@@ -78,6 +80,8 @@ func createPipedResponseTextarea() textarea.Model {
 	i.Prompt = ""
 	i.FocusedStyle.Base = focusTextarea
 	i.BlurredStyle.Base = blurTextarea
+	i.FocusedStyle.LineNumber = focusTextareaLineNumber
+	i.BlurredStyle.LineNumber = blurTextareaLineNumber
 	i.Blur()
 	return i
 }

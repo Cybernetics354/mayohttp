@@ -17,7 +17,7 @@ func (k keyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-var mapped = keyMap{
+var keyMaps = keyMap{
 	Run: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("Enter", "Run"),
