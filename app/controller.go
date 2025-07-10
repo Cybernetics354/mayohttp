@@ -93,7 +93,22 @@ func (m State) View() string {
 func (m *State) Request() {
 	m.ShowSpinner()
 	go func() {
-		req, err := http.NewRequest(m.method, m.url.Value(), nil)
+		command := exec.Command(
+			"bash",
+			"-c",
+			fmt.Sprintf("export $(cat '%s' | xargs) && echo \"%s\"", EnvFilePath, m.url.Value()),
+		)
+
+		url, err := command.Output()
+		if err != nil {
+			m.resSub <- requestResponse{
+				err: err,
+				res: fmt.Sprintf("Failed to parse url : %s", err.Error()),
+			}
+			return
+		}
+
+		req, err := http.NewRequest(m.method, strings.TrimSpace(string(url)), nil)
 		if err != nil {
 			m.resSub <- requestResponse{
 				err: err,
