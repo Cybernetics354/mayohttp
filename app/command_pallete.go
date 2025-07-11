@@ -35,11 +35,6 @@ var commandPalletes = []list.Item{
 		desc:      "Edit request header",
 	},
 	commandPallete{
-		commandId: COMMAND_OPEN_HEADER,
-		title:     "Header",
-		desc:      "Edit request header",
-	},
-	commandPallete{
 		commandId: COMMAND_SELECT_METHOD,
 		title:     "Method",
 		desc:      "Select request method",

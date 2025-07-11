@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -154,26 +155,45 @@ func (m *State) RunRequest() (tea.Model, tea.Cmd) {
 }
 
 func (m *State) Request() tea.Msg {
-	command := exec.Command(
-		"bash",
-		"-c",
-		fmt.Sprintf(
-			"set -a && source %s && set +a && echo '%s' | envsubst",
-			EnvFilePath,
-			m.url.Value(),
-		),
-	)
+	uc := make(chan parseWithEnvMsg)
+	bc := make(chan parseWithEnvMsg)
+	hc := make(chan parseWithEnvMsg)
+	defer close(uc)
+	defer close(bc)
+	defer close(hc)
 
-	url, err := command.Output()
-	if err != nil {
+	go parseWithEnv(m.url.Value(), uc)
+	go parseWithEnv(m.body.Value(), bc)
+	go parseWithEnv(m.header.Value(), hc)
+
+	url := <-uc
+	body := <-bc
+	header := <-hc
+
+	if url.err != nil || body.err != nil || header.err != nil {
 		m.resSub <- requestResultMsg{
-			err: err,
-			res: fmt.Sprintf("Failed to parse url : %s", err.Error()),
+			err: url.err,
+			res: "Failed to parse request with env",
 		}
 		return nil
 	}
 
-	req, err := http.NewRequest(m.method, strings.TrimSpace(string(url)), nil)
+	bodyReader := bytes.NewBuffer([]byte(body.str))
+	req, err := http.NewRequest(m.method, url.str, bodyReader)
+
+	// The header example will look like this:
+	// Header-1: value1
+	// Header-2: value2
+	headers := strings.Split(header.str, "\n")
+	for _, header := range headers {
+		header := strings.SplitN(header, ":", 2)
+		if len(header) != 2 {
+			continue
+		}
+
+		req.Header.Add(strings.TrimSpace(header[0]), strings.TrimSpace(header[1]))
+	}
+
 	if err != nil {
 		m.resSub <- requestResultMsg{
 			err: err,
@@ -202,7 +222,14 @@ func (m *State) Request() tea.Msg {
 		return nil
 	}
 
-	m.resSub <- requestResultMsg{res: string(respDump)}
+	resStr := fmt.Sprintf(
+		"Request Header\n%s\n\nRequest Body\n%s\n\nResponse\n%s",
+		header.str,
+		body.str,
+		string(respDump),
+	)
+
+	m.resSub <- requestResultMsg{res: resStr}
 	return nil
 }
 
@@ -220,7 +247,12 @@ func (m *State) PipeRequest() tea.Msg {
 	command := exec.Command(
 		"bash",
 		"-c",
-		fmt.Sprintf("set -a && source %s && set +a && echo '%s' | %s", EnvFilePath, resp, pipe),
+		fmt.Sprintf(
+			"set -a && source %s && set +a && echo '%s' | %s",
+			EnvFilePath,
+			strings.ReplaceAll(resp, "'", "'\\''"),
+			pipe,
+		),
 	)
 	output, err := command.CombinedOutput()
 	if err != nil {
@@ -445,7 +477,7 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 		/// sometimes the file is not changed yet and when we try to open it
 		/// it still on previous state
 		/// usually happen when you use :wq on vim
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 
 		f, err := os.Open(tempFilePath)
 		if err != nil {
@@ -467,7 +499,7 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 			f.SetValue(str)
 		}
 
-		return errMsg(err)
+		return nil
 	})
 }
 
@@ -602,10 +634,12 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	m.url.SetValue(session.Url)
 	m.pipe.SetValue(session.Pipe)
 	m.pipedresp.SetValue(session.PipedResponse)
-	m.method = session.Method
 	m.response.SetValue(session.Response)
 	m.header.SetValue(session.Header)
 	m.body.SetValue(session.Body)
+	m.method = session.Method
+	m.url.Prompt = m.method + " | "
+	m.url.Width = m.sw - 5 - len(m.url.Prompt)
 
 	return m, setActivity("Session loaded from " + msg.path)
 }

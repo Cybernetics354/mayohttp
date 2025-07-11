@@ -27,9 +27,9 @@ func (m *State) Render() string {
 	var str string
 	switch m.state {
 	case COMMAND_PALLETE:
-		str = lipgloss.JoinVertical(lipgloss.Top, m.commands.View(), m.activity)
+		str = lipgloss.JoinVertical(lipgloss.Top, m.commands.View())
 	case METHOD_PALLETE:
-		str = lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View(), m.activity)
+		str = lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View())
 	default:
 		str = lipgloss.JoinVertical(
 			lipgloss.Top,
@@ -39,7 +39,7 @@ func (m *State) Render() string {
 			lipgloss.JoinHorizontal(
 				lipgloss.Center,
 				m.RenderHelp(),
-				" | ",
+				"  | ",
 				m.RenderSpinner(),
 				m.activity,
 				" | ",
