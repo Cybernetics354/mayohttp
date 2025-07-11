@@ -2,4 +2,5 @@ coverage.txt
 dist/
 
 .mayohttp/
+build
 .env*
