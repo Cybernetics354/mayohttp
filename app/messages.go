@@ -29,9 +29,19 @@ type prevSectionMsg struct{}
 
 type runPipeMsg struct{}
 
-type openEditorMsg struct{}
+type setActivityMsg struct {
+	activity string
+}
+
+type openEditorMsg struct {
+	state string
+}
 
 type openEnvMsg struct{}
+
+type openRequestBodyMsg struct{}
+
+type openRequestHeaderMsg struct{}
 
 type addStackMsg struct {
 	state string
@@ -107,8 +117,12 @@ func listenPipeResponse(sub chan pipeResultMsg) tea.Cmd {
 	}
 }
 
-func openEditor() tea.Msg {
-	return openEditorMsg{}
+func openEditor(state string) tea.Cmd {
+	return func() tea.Msg {
+		return openEditorMsg{
+			state: state,
+		}
+	}
 }
 
 func addStack(state string) tea.Cmd {
@@ -178,5 +192,19 @@ func saveSession(path string) tea.Cmd {
 func loadSession(path string) tea.Cmd {
 	return func() tea.Msg {
 		return loadSessionMsg{path: path}
+	}
+}
+
+func openRequestBody() tea.Msg {
+	return openRequestBodyMsg{}
+}
+
+func openRequestHeader() tea.Msg {
+	return openRequestHeaderMsg{}
+}
+
+func setActivity(activity string) tea.Cmd {
+	return func() tea.Msg {
+		return setActivityMsg{activity: activity}
 	}
 }

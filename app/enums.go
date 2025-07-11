@@ -5,8 +5,8 @@ const (
 	FOCUS_RESPONSE  = "focus_response"
 	FOCUS_PIPE      = "focus_pipe"
 	FOCUS_PIPEDRESP = "focus_pipedresp"
-	EDIT_BODY       = "edit_body"
-	EDIT_HEADER     = "edit_header"
+	FOCUS_BODY      = "focus_body"
+	FOCUS_HEADER    = "focus_header"
 	COMMAND_PALLETE = "command_pallete"
 	METHOD_PALLETE  = "method_pallete"
 

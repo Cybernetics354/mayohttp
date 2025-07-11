@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -79,7 +80,11 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case openEnvMsg:
 		return m.OpenEnv()
 	case openEditorMsg:
-		return m.OpenEditor()
+		return m.OpenEditor(msg)
+	case openRequestBodyMsg:
+		return m.OpenRequestBody()
+	case openRequestHeaderMsg:
+		return m.OpenRequestHeader()
 	case hideSpinnerMsg:
 		return m.HideSpinner()
 	case showSpinnerMsg:
@@ -94,6 +99,9 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.HandleRequestResult(msg)
 	case pipeResultMsg:
 		return m.HandlePipeResult(msg)
+	case setActivityMsg:
+		m.activity = msg.activity
+		return m, nil
 	case errMsg:
 		return m.HandleErrorMsg(msg)
 	}
@@ -124,6 +132,7 @@ func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
 	m.response.SetValue(msg.res)
 	return m, tea.Batch(
 		hideSpinner,
+		setActivity("Request complete"),
 		runPipe,
 		saveSession(defaultSessionPath),
 		listenResponse(m.resSub),
@@ -134,13 +143,14 @@ func (m *State) HandlePipeResult(msg pipeResultMsg) (tea.Model, tea.Cmd) {
 	m.pipedresp.SetValue(msg.res)
 	return m, tea.Batch(
 		hideSpinner,
+		setActivity("Piping complete"),
 		saveSession(defaultSessionPath),
 		listenPipeResponse(m.pipeResSub),
 	)
 }
 
 func (m *State) RunRequest() (tea.Model, tea.Cmd) {
-	return m, tea.Batch(showSpinner, m.Request)
+	return m, tea.Batch(showSpinner, setActivity("Requesting..."), m.Request)
 }
 
 func (m *State) Request() tea.Msg {
@@ -197,7 +207,7 @@ func (m *State) Request() tea.Msg {
 }
 
 func (m *State) RunPipe() (tea.Model, tea.Cmd) {
-	return m, tea.Batch(showSpinner, m.PipeRequest)
+	return m, tea.Batch(showSpinner, setActivity("Piping..."), m.PipeRequest)
 }
 
 func (m *State) PipeRequest() tea.Msg {
@@ -222,8 +232,8 @@ func (m *State) PipeRequest() tea.Msg {
 	return nil
 }
 
-func (m *State) GetFocusedField() any {
-	switch m.state {
+func (m *State) GetField(state string) any {
+	switch state {
 	case FOCUS_URL:
 		return &m.url
 	case FOCUS_PIPE:
@@ -232,15 +242,19 @@ func (m *State) GetFocusedField() any {
 		return &m.pipedresp
 	case FOCUS_RESPONSE:
 		return &m.response
-	case EDIT_BODY:
+	case FOCUS_BODY:
 		return &m.body
-	case EDIT_HEADER:
+	case FOCUS_HEADER:
 		return &m.header
 	case COMMAND_PALLETE:
 		return &m.commands
 	}
 
 	return &m.url
+}
+
+func (m *State) GetFocusedField() any {
+	return m.GetField(m.state)
 }
 
 func (m *State) HandleErrorMsg(msg errMsg) (tea.Model, tea.Cmd) {
@@ -264,7 +278,7 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	switch {
 	case key.Matches(msg, keyMaps.Open):
-		return m, openEditor
+		return m, openEditor(m.state)
 	case key.Matches(msg, keyMaps.Quit):
 		return m.Quit()
 	case key.Matches(msg, keyMaps.Commands):
@@ -395,9 +409,9 @@ func (m *State) RefreshState() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m *State) OpenEditor() (tea.Model, tea.Cmd) {
+func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 	var str string
-	switch f := m.GetFocusedField().(type) {
+	switch f := m.GetField(msg.state).(type) {
 	case *textarea.Model:
 		str = f.Value()
 	case *textinput.Model:
@@ -428,6 +442,11 @@ func (m *State) OpenEditor() (tea.Model, tea.Cmd) {
 
 	cmd := exec.Command(editor, tempFilePath)
 	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+		/// sometimes the file is not changed yet and when we try to open it
+		/// it still on previous state
+		/// usually happen when you use :wq on vim
+		time.Sleep(100 * time.Millisecond)
+
 		f, err := os.Open(tempFilePath)
 		if err != nil {
 			return errMsg(err)
@@ -441,7 +460,7 @@ func (m *State) OpenEditor() (tea.Model, tea.Cmd) {
 
 		str := strings.TrimSpace(string(b))
 
-		switch f := m.GetFocusedField().(type) {
+		switch f := m.GetField(msg.state).(type) {
 		case *textarea.Model:
 			f.SetValue(str)
 		case *textinput.Model:
@@ -491,6 +510,11 @@ func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 		return m, addStack(METHOD_PALLETE)
 	case COMMAND_SAVE_SESSION:
 		return m, saveSession(defaultSessionPath)
+	case COMMAND_OPEN_BODY:
+		return m, openRequestBody
+	case COMMAND_OPEN_HEADER:
+		return m, openRequestHeader
+
 	default:
 		return m, nil
 	}
@@ -534,7 +558,7 @@ func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
 	f, err := os.Create(msg.path)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
-		return m, nil
+		return m, setActivity("Error saving session")
 	}
 
 	defer f.Close()
@@ -542,23 +566,23 @@ func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
 	b, err := json.Marshal(session)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
-		return m, nil
+		return m, setActivity("Error saving session")
 	}
 
 	_, err = f.Write(b)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
-		return m, nil
+		return m, setActivity("Error saving session")
 	}
 
-	return m, nil
+	return m, setActivity("Session saved to " + msg.path)
 }
 
 func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	var session Session
 	f, err := os.Open(msg.path)
 	if err != nil {
-		return m, nil
+		return m, setActivity("Error loading session")
 	}
 
 	defer f.Close()
@@ -566,13 +590,13 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	b, err := io.ReadAll(f)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
-		return m, nil
+		return m, setActivity("Error loading session")
 	}
 
 	err = json.Unmarshal(b, &session)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
-		return m, nil
+		return m, setActivity("Error loading session")
 	}
 
 	m.url.SetValue(session.Url)
@@ -583,5 +607,13 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	m.header.SetValue(session.Header)
 	m.body.SetValue(session.Body)
 
-	return m, nil
+	return m, setActivity("Session loaded from " + msg.path)
+}
+
+func (m *State) OpenRequestBody() (tea.Model, tea.Cmd) {
+	return m, tea.Batch(openEditor(FOCUS_BODY))
+}
+
+func (m *State) OpenRequestHeader() (tea.Model, tea.Cmd) {
+	return m, tea.Batch(openEditor(FOCUS_HEADER))
 }

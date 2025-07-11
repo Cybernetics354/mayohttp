@@ -47,6 +47,6 @@ var commandPalletes = []list.Item{
 	commandPallete{
 		commandId: COMMAND_SAVE_SESSION,
 		title:     "Save Session",
-		desc:      "Manually save session, in case the session is not automatically saved",
+		desc:      "Manually save session",
 	},
 }

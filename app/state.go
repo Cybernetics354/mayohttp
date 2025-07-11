@@ -27,6 +27,7 @@ type State struct {
 	help         help.Model
 	keys         keyMap
 	quitting     bool
+	activity     string
 	err          error
 	sw           int
 	sh           int
@@ -51,6 +52,7 @@ func InitialModel() State {
 		showSpinner:  false,
 		help:         createHelp(),
 		keys:         keyMaps,
+		activity:     "Idle",
 		sw:           0,
 		sh:           0,
 	}

@@ -27,16 +27,24 @@ func (m *State) Render() string {
 	var str string
 	switch m.state {
 	case COMMAND_PALLETE:
-		str = m.commands.View()
+		str = lipgloss.JoinVertical(lipgloss.Top, m.commands.View(), m.activity)
 	case METHOD_PALLETE:
-		str = m.methodSelect.View()
+		str = lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View(), m.activity)
 	default:
 		str = lipgloss.JoinVertical(
 			lipgloss.Top,
 			m.RenderURL(),
 			m.RenderPipe(),
 			m.RenderPipedResponse(),
-			lipgloss.JoinHorizontal(lipgloss.Center, m.RenderSpinner(), m.RenderHelp()),
+			lipgloss.JoinHorizontal(
+				lipgloss.Center,
+				m.RenderHelp(),
+				" | ",
+				m.RenderSpinner(),
+				m.activity,
+				" | ",
+				fmt.Sprintf("ENV(%s)", EnvFilePath),
+			),
 		)
 		break
 	}
