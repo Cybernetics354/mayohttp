@@ -92,80 +92,76 @@ func (m State) View() string {
 
 func (m *State) Request() {
 	m.ShowSpinner()
-	go func() {
-		command := exec.Command(
-			"bash",
-			"-c",
-			fmt.Sprintf("export $(cat '%s' | xargs) && echo \"%s\"", EnvFilePath, m.url.Value()),
-		)
+	command := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("set -a && source %s && set +a && echo '%s' | envsubst", EnvFilePath, m.url.Value()),
+	)
 
-		url, err := command.Output()
-		if err != nil {
-			m.resSub <- requestResponse{
-				err: err,
-				res: fmt.Sprintf("Failed to parse url : %s", err.Error()),
-			}
-			return
+	url, err := command.Output()
+	if err != nil {
+		m.resSub <- requestResponse{
+			err: err,
+			res: fmt.Sprintf("Failed to parse url : %s", err.Error()),
 		}
+		return
+	}
 
-		req, err := http.NewRequest(m.method, strings.TrimSpace(string(url)), nil)
-		if err != nil {
-			m.resSub <- requestResponse{
-				err: err,
-				res: fmt.Sprintf("Request error : %s", err.Error()),
-			}
-			return
+	req, err := http.NewRequest(m.method, strings.TrimSpace(string(url)), nil)
+	if err != nil {
+		m.resSub <- requestResponse{
+			err: err,
+			res: fmt.Sprintf("Request error : %s", err.Error()),
 		}
+		return
+	}
 
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			m.resSub <- requestResponse{
-				err: err,
-				res: fmt.Sprintf("Request do error : %s", err.Error()),
-			}
-			return
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		m.resSub <- requestResponse{
+			err: err,
+			res: fmt.Sprintf("Request do error : %s", err.Error()),
 		}
+		return
+	}
 
-		defer resp.Body.Close()
+	defer resp.Body.Close()
 
-		respDump, err := httputil.DumpResponse(resp, true)
-		if err != nil {
-			m.resSub <- requestResponse{
-				err: err,
-				res: fmt.Sprintf("Response dump error : %s", err.Error()),
-			}
-			return
+	respDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		m.resSub <- requestResponse{
+			err: err,
+			res: fmt.Sprintf("Response dump error : %s", err.Error()),
 		}
+		return
+	}
 
-		m.resSub <- requestResponse{res: string(respDump)}
-	}()
+	m.resSub <- requestResponse{res: string(respDump)}
 }
 
 func (m *State) RunPipe() {
 	m.ShowSpinner()
-	go func() {
-		resp, pipe := m.response.Value(), m.pipe.Value()
-		if resp == "" || pipe == "" {
-			m.pipeResSub <- requestPipeResponse{res: m.response.Value()}
-			return
-		}
+	resp, pipe := m.response.Value(), m.pipe.Value()
+	if resp == "" || pipe == "" {
+		m.pipeResSub <- requestPipeResponse{res: m.response.Value()}
+		return
+	}
 
-		command := exec.Command(
-			"bash",
-			"-c",
-			fmt.Sprintf("export $(cat '%s' | xargs) && echo '%s' | %s", EnvFilePath, resp, pipe),
-		)
-		output, err := command.CombinedOutput()
-		if err != nil {
-			m.pipeResSub <- requestPipeResponse{
-				err: err,
-				res: fmt.Sprintf("Command pipe error : %s", err.Error()),
-			}
-			return
+	command := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("set -a && source %s && set +a && echo '%s' | %s", EnvFilePath, resp, pipe),
+	)
+	output, err := command.CombinedOutput()
+	if err != nil {
+		m.pipeResSub <- requestPipeResponse{
+			err: err,
+			res: fmt.Sprintf("Command pipe error : %s", err.Error()),
 		}
+		return
+	}
 
-		m.pipeResSub <- requestPipeResponse{res: string(output)}
-	}()
+	m.pipeResSub <- requestPipeResponse{res: string(output)}
 }
 
 func (m *State) GetFocusedField() any {
@@ -230,12 +226,12 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case key.Matches(msg, keyMaps.Run):
 		if m.state == FOCUS_URL {
-			m.Request()
+			go m.Request()
 			return m, nil
 		}
 
 		if m.state == FOCUS_PIPE {
-			m.RunPipe()
+			go m.RunPipe()
 			return m, nil
 		}
 
