@@ -12,74 +12,76 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type requestResponse struct {
-	err error
-	res string
-}
-
-type requestPipeResponse struct {
-	err error
-	res string
-}
-
-func listenResponse(sub chan requestResponse) tea.Cmd {
-	return func() tea.Msg {
-		return <-sub
-	}
-}
-
-func listenPipeResponse(sub chan requestPipeResponse) tea.Cmd {
-	return func() tea.Msg {
-		return <-sub
-	}
-}
-
 func (m State) Init() tea.Cmd {
 	return tea.Batch(
 		tea.SetWindowTitle("Mayo HTTP"),
 		tea.EnterAltScreen,
 		m.spinner.Tick,
+		refreshState,
 		listenResponse(m.resSub),
 		listenPipeResponse(m.pipeResSub),
 	)
 }
 
 func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case list.FilterMatchesMsg:
+		m.commands, cmd = m.commands.Update(msg)
+		return m, cmd
+	case spinner.TickMsg:
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
 	case tea.WindowSizeMsg:
 		return m.HandleWindowChange(msg)
 	case tea.KeyMsg:
 		return m.HandleKeyPress(msg)
-	case spinner.TickMsg:
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
-	case requestResponse:
-		m.HideSpinner()
-		m.response.SetValue(msg.res)
-		m.RunPipe()
-		return m, listenResponse(m.resSub)
-	case requestPipeResponse:
-		m.HideSpinner()
-		m.pipedresp.SetValue(msg.res)
-		return m, listenPipeResponse(m.pipeResSub)
+	case recalculateComponentSizesMsg:
+		return m.RecalculateComponentSize()
+	case setStateMsg:
+		return m.SetState(msg.state)
+	case addStackMsg:
+		return m.AddStack(msg.state)
+	case popStackMsg:
+		return m.PopStack()
+	case nextSectionMsg:
+		return m.NextSection()
+	case prevSectionMsg:
+		return m.PrevSection()
+	case selectCommandPalleteMsg:
+		return m.SelectCommandPallete()
+	case runCommandMsg:
+		return m.RunCommand(msg)
+	case openEnvMsg:
+		return m.OpenEnv()
+	case openEditorMsg:
+		return m.OpenEditor()
+	case hideSpinnerMsg:
+		return m.HideSpinner()
+	case showSpinnerMsg:
+		return m.ShowSpinner()
+	case refreshStateMsg:
+		return m.RefreshState()
+	case runRequestMsg:
+		return m.RunRequest()
+	case runPipeMsg:
+		return m.RunPipe()
+	case requestResultMsg:
+		return m.HandleRequestResult(msg)
+	case pipeResultMsg:
+		return m.HandlePipeResult(msg)
 	case errMsg:
 		return m.HandleErrorMsg(msg)
 	}
 
-	// for filtering, i don't know why it doesn't count as tea.KeyMsg
-	// i don't really know the exact type too so i'll just put it on default handler
-	//
-	// (i've wasted my 2 hours for this shit)
-	var cmd tea.Cmd
-	m.commands, cmd = m.commands.Update(msg)
-	return m, cmd
+	return m, nil
 }
 
 func (m State) View() string {
@@ -90,8 +92,21 @@ func (m State) View() string {
 	return m.Render()
 }
 
-func (m *State) Request() {
-	m.ShowSpinner()
+func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
+	m.response.SetValue(msg.res)
+	return m, tea.Batch(hideSpinner, runPipe, listenResponse(m.resSub))
+}
+
+func (m *State) HandlePipeResult(msg pipeResultMsg) (tea.Model, tea.Cmd) {
+	m.pipedresp.SetValue(msg.res)
+	return m, tea.Batch(hideSpinner, listenPipeResponse(m.pipeResSub))
+}
+
+func (m *State) RunRequest() (tea.Model, tea.Cmd) {
+	return m, tea.Batch(showSpinner, m.Request)
+}
+
+func (m *State) Request() tea.Msg {
 	command := exec.Command(
 		"bash",
 		"-c",
@@ -104,51 +119,55 @@ func (m *State) Request() {
 
 	url, err := command.Output()
 	if err != nil {
-		m.resSub <- requestResponse{
+		m.resSub <- requestResultMsg{
 			err: err,
 			res: fmt.Sprintf("Failed to parse url : %s", err.Error()),
 		}
-		return
+		return nil
 	}
 
 	req, err := http.NewRequest(m.method, strings.TrimSpace(string(url)), nil)
 	if err != nil {
-		m.resSub <- requestResponse{
+		m.resSub <- requestResultMsg{
 			err: err,
 			res: fmt.Sprintf("Request error : %s", err.Error()),
 		}
-		return
+		return nil
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		m.resSub <- requestResponse{
+		m.resSub <- requestResultMsg{
 			err: err,
 			res: fmt.Sprintf("Request do error : %s", err.Error()),
 		}
-		return
+		return nil
 	}
 
 	defer resp.Body.Close()
 
 	respDump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
-		m.resSub <- requestResponse{
+		m.resSub <- requestResultMsg{
 			err: err,
 			res: fmt.Sprintf("Response dump error : %s", err.Error()),
 		}
-		return
+		return nil
 	}
 
-	m.resSub <- requestResponse{res: string(respDump)}
+	m.resSub <- requestResultMsg{res: string(respDump)}
+	return nil
 }
 
-func (m *State) RunPipe() {
-	m.ShowSpinner()
+func (m *State) RunPipe() (tea.Model, tea.Cmd) {
+	return m, tea.Batch(showSpinner, m.PipeRequest)
+}
+
+func (m *State) PipeRequest() tea.Msg {
 	resp, pipe := m.response.Value(), m.pipe.Value()
 	if resp == "" || pipe == "" {
-		m.pipeResSub <- requestPipeResponse{res: m.response.Value()}
-		return
+		m.pipeResSub <- pipeResultMsg{res: m.response.Value()}
+		return nil
 	}
 
 	command := exec.Command(
@@ -158,14 +177,12 @@ func (m *State) RunPipe() {
 	)
 	output, err := command.CombinedOutput()
 	if err != nil {
-		m.pipeResSub <- requestPipeResponse{
-			err: err,
-			res: fmt.Sprintf("Command pipe error : %s", err.Error()),
-		}
-		return
+		m.pipeResSub <- pipeResultMsg{err: err, res: string(output)}
+		return nil
 	}
 
-	m.pipeResSub <- requestPipeResponse{res: string(output)}
+	m.pipeResSub <- pipeResultMsg{res: string(output)}
+	return nil
 }
 
 func (m *State) GetFocusedField() any {
@@ -202,9 +219,7 @@ func (m *State) HandleWindowChange(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	m.sw = cw
 	m.sh = ch
 
-	m.RecalculateComponentSize()
-
-	return m, nil
+	return m, recalculateComponentSizes
 }
 
 func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -212,36 +227,35 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	switch {
 	case key.Matches(msg, keyMaps.Open):
-		return m, m.OpenOnEditor()
+		return m, openEditor
 	case key.Matches(msg, keyMaps.Quit):
-		m.Quit()
-		if m.quitting {
-			return m, tea.Quit
-		}
-		return m, nil
+		return m.Quit()
 	case key.Matches(msg, keyMaps.Commands):
-		m.AddStack()
-		m.SetState(COMMAND_PALLETE)
-		return m, nil
+		return m, addStack(COMMAND_PALLETE)
 	case key.Matches(msg, keyMaps.Next):
-		m.NextState()
-		return m, nil
+		return m, nextSection
 	case key.Matches(msg, keyMaps.Back):
-		m.PrevState()
-		return m, nil
+		return m, prevSection
 	case key.Matches(msg, keyMaps.Run):
+		switch m.state {
+		case FOCUS_URL:
+			return m, runRequest
+		case FOCUS_PIPE:
+			return m, runPipe
+		case COMMAND_PALLETE:
+			return m, selectCommandPallete
+		}
+
 		if m.state == FOCUS_URL {
-			go m.Request()
-			return m, nil
+			return m, runRequest
 		}
 
 		if m.state == FOCUS_PIPE {
-			go m.RunPipe()
-			return m, nil
+			return m, runPipe
 		}
 
 		if m.state == COMMAND_PALLETE {
-			return m, m.SelectCommandPallete()
+			return m, selectCommandPallete
 		}
 	}
 
@@ -261,9 +275,9 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *State) NextState() {
+func (m *State) NextSection() (tea.Model, tea.Cmd) {
 	if !slices.Contains(homeLayout, m.state) {
-		return
+		return m, nil
 	}
 
 	var nextState string
@@ -276,12 +290,12 @@ func (m *State) NextState() {
 		break
 	}
 
-	m.SetState(nextState)
+	return m, setState(nextState)
 }
 
-func (m *State) PrevState() {
+func (m *State) PrevSection() (tea.Model, tea.Cmd) {
 	if !slices.Contains(homeLayout, m.state) {
-		return
+		return m, nil
 	}
 
 	var prevState string
@@ -294,39 +308,43 @@ func (m *State) PrevState() {
 		break
 	}
 
-	m.SetState(prevState)
+	return m, setState(prevState)
 }
 
-func (m *State) Quit() {
+func (m *State) Quit() (tea.Model, tea.Cmd) {
 	if len(m.stateStack) <= 1 {
-		m.quitting = true
-		return
+		return m, tea.Quit
 	}
 
-	m.PopStack()
+	return m, popStack
 }
 
-func (m *State) AddStack() {
-	m.stateStack = append(m.stateStack, m.state)
+func (m *State) AddStack(state string) (tea.Model, tea.Cmd) {
+	m.stateStack = append(m.stateStack, state)
+	m.state = state
+
+	return m, refreshState
 }
 
-func (m *State) PopStack() {
+func (m *State) PopStack() (tea.Model, tea.Cmd) {
 	if len(m.stateStack) <= 1 {
-		return
+		return m, nil
 	}
 
 	m.stateStack = m.stateStack[:len(m.stateStack)-1]
 	m.state = m.stateStack[len(m.stateStack)-1]
-	m.RefreshState()
+
+	return m, refreshState
 }
 
-func (m *State) SetState(state string) {
+func (m *State) SetState(state string) (tea.Model, tea.Cmd) {
 	m.state = state
 	m.stateStack[len(m.stateStack)-1] = state
-	m.RefreshState()
+
+	return m, refreshState
 }
 
-func (m *State) RefreshState() {
+func (m *State) RefreshState() (tea.Model, tea.Cmd) {
 	m.url.Blur()
 	m.response.Blur()
 	m.pipe.Blur()
@@ -341,9 +359,11 @@ func (m *State) RefreshState() {
 	case *textinput.Model:
 		f.Focus()
 	}
+
+	return m, nil
 }
 
-func (m *State) OpenOnEditor() tea.Cmd {
+func (m *State) OpenEditor() (tea.Model, tea.Cmd) {
 	var str string
 	switch f := m.GetFocusedField().(type) {
 	case *textarea.Model:
@@ -351,7 +371,7 @@ func (m *State) OpenOnEditor() tea.Cmd {
 	case *textinput.Model:
 		str = f.Value()
 	default:
-		return nil
+		return m, nil
 	}
 
 	dir := filepath.Dir(tempFilePath)
@@ -359,14 +379,14 @@ func (m *State) OpenOnEditor() tea.Cmd {
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
 			m.err = err
-			return nil
+			return m, nil
 		}
 	}
 
 	f, err := os.Create(tempFilePath)
 	if err != nil {
 		m.err = err
-		return nil
+		return m, nil
 	}
 
 	f.WriteString(str)
@@ -375,7 +395,7 @@ func (m *State) OpenOnEditor() tea.Cmd {
 	editor := getDefaultEditor()
 
 	cmd := exec.Command(editor, tempFilePath)
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
+	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
 		f, err := os.Open(tempFilePath)
 		if err != nil {
 			return errMsg(err)
@@ -400,29 +420,39 @@ func (m *State) OpenOnEditor() tea.Cmd {
 	})
 }
 
-func (m *State) ShowSpinner() {
+func (m *State) ShowSpinner() (tea.Model, tea.Cmd) {
 	m.showSpinner = true
+	return m, nil
 }
 
-func (m *State) HideSpinner() {
+func (m *State) HideSpinner() (tea.Model, tea.Cmd) {
 	m.showSpinner = false
+	return m, nil
 }
 
-func (m *State) SelectCommandPallete() tea.Cmd {
+func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 	i, ok := m.commands.SelectedItem().(commandPallete)
 	if !ok {
-		return nil
+		return m, popStack
 	}
 
-	m.PopStack()
+	return m, tea.Batch(runCommand(i.commandId), popStack)
+}
 
-	if i.commandId != COMMAND_OPEN_ENV {
-		return nil
+func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
+	switch command.commandId {
+	case COMMAND_OPEN_ENV:
+		return m, tea.Batch(openEnv, nil)
+	default:
+		return m, nil
 	}
+}
 
+func (m *State) OpenEnv() (tea.Model, tea.Cmd) {
 	editor := getDefaultEditor()
 	cmd := exec.Command(editor, EnvFilePath)
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
+
+	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
 		return errMsg(err)
 	})
 }

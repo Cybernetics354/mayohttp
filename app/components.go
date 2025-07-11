@@ -16,15 +16,10 @@ func createCommandList() list.Model {
 	return i
 }
 
-func createUrlInput(method string) textinput.Model {
+func createUrlInput() textinput.Model {
 	i := textinput.New()
-
-	i.PromptStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("205")).
-		Bold(true).PaddingRight(2)
-	i.Prompt = method
 	i.SetValue(debugInitialUrl)
-	i.Focus()
+	i.Prompt = ""
 
 	return i
 }
@@ -35,7 +30,6 @@ func createPipeInput() textinput.Model {
 		Foreground(lipgloss.Color("205")).
 		Bold(true).PaddingRight(2)
 	i.Prompt = "PIPE"
-	i.Blur()
 
 	return i
 }
@@ -58,7 +52,6 @@ func createHeaderTextarea() textarea.Model {
 	i.Prompt = ""
 	i.FocusedStyle.Base = focusTextarea
 	i.BlurredStyle.Base = blurTextarea
-	i.Blur()
 	return i
 }
 
@@ -70,7 +63,6 @@ func createResponseTextarea() textarea.Model {
 	i.BlurredStyle.Base = blurTextarea
 	i.FocusedStyle.LineNumber = focusTextareaLineNumber
 	i.BlurredStyle.LineNumber = blurTextareaLineNumber
-	i.Blur()
 	return i
 }
 
@@ -82,7 +74,6 @@ func createPipedResponseTextarea() textarea.Model {
 	i.BlurredStyle.Base = blurTextarea
 	i.FocusedStyle.LineNumber = focusTextareaLineNumber
 	i.BlurredStyle.LineNumber = blurTextareaLineNumber
-	i.Blur()
 	return i
 }
 

@@ -12,8 +12,8 @@ type State struct {
 	state       string
 	stateStack  []string
 	method      string
-	resSub      chan requestResponse
-	pipeResSub  chan requestPipeResponse
+	resSub      chan requestResultMsg
+	pipeResSub  chan pipeResultMsg
 	commands    list.Model
 	url         textinput.Model
 	response    textarea.Model
@@ -32,19 +32,16 @@ type State struct {
 }
 
 func InitialModel() State {
-	url := createUrlInput(REQUEST_METHOD_GET)
-	url.Focus()
-
 	return State{
 		state:       FOCUS_URL,
 		stateStack:  []string{FOCUS_URL},
 		method:      REQUEST_METHOD_GET,
-		resSub:      make(chan requestResponse),
-		pipeResSub:  make(chan requestPipeResponse),
+		resSub:      make(chan requestResultMsg),
+		pipeResSub:  make(chan pipeResultMsg),
 		commands:    createCommandList(),
 		body:        createBodyTextarea(),
 		header:      createHeaderTextarea(),
-		url:         url,
+		url:         createUrlInput(),
 		pipe:        createPipeInput(),
 		response:    createResponseTextarea(),
 		pipedresp:   createPipedResponseTextarea(),

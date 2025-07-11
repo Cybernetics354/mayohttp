@@ -1,8 +1,12 @@
 package app
 
-import "fmt"
+import (
+	"fmt"
 
-func (m *State) RecalculateComponentSize() {
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 	w, h := m.sw, m.sh
 
 	m.help.Width = w
@@ -13,6 +17,8 @@ func (m *State) RecalculateComponentSize() {
 	m.pipedresp.SetWidth(w)
 	m.pipedresp.SetHeight(h - 8)
 	m.commands.SetSize(w, h)
+
+	return m, nil
 }
 
 func (m *State) Render() string {

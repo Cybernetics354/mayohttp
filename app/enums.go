@@ -1,6 +1,7 @@
 package app
 
 const (
+	FOCUS_METHOD    = "focus_method"
 	FOCUS_URL       = "focus_url"
 	FOCUS_RESPONSE  = "focus_response"
 	FOCUS_PIPE      = "focus_pipe"
