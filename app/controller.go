@@ -95,7 +95,11 @@ func (m *State) Request() {
 	command := exec.Command(
 		"bash",
 		"-c",
-		fmt.Sprintf("set -a && source %s && set +a && echo '%s' | envsubst", EnvFilePath, m.url.Value()),
+		fmt.Sprintf(
+			"set -a && source %s && set +a && echo '%s' | envsubst",
+			EnvFilePath,
+			m.url.Value(),
+		),
 	)
 
 	url, err := command.Output()
@@ -216,6 +220,7 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case key.Matches(msg, keyMaps.Commands):
+		m.AddStack()
 		m.SetState(COMMAND_PALLETE)
 		return m, nil
 	case key.Matches(msg, keyMaps.Next):
@@ -293,16 +298,31 @@ func (m *State) PrevState() {
 }
 
 func (m *State) Quit() {
-	if m.state == FOCUS_URL {
+	if len(m.stateStack) <= 1 {
 		m.quitting = true
 		return
 	}
 
-	m.SetState(FOCUS_URL)
+	m.PopStack()
+}
+
+func (m *State) AddStack() {
+	m.stateStack = append(m.stateStack, m.state)
+}
+
+func (m *State) PopStack() {
+	if len(m.stateStack) <= 1 {
+		return
+	}
+
+	m.stateStack = m.stateStack[:len(m.stateStack)-1]
+	m.state = m.stateStack[len(m.stateStack)-1]
+	m.RefreshState()
 }
 
 func (m *State) SetState(state string) {
 	m.state = state
+	m.stateStack[len(m.stateStack)-1] = state
 	m.RefreshState()
 }
 
@@ -394,7 +414,7 @@ func (m *State) SelectCommandPallete() tea.Cmd {
 		return nil
 	}
 
-	m.SetState(i.state)
+	m.PopStack()
 
 	if i.commandId != COMMAND_OPEN_ENV {
 		return nil

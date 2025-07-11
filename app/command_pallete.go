@@ -3,7 +3,7 @@ package app
 import "github.com/charmbracelet/bubbles/list"
 
 type commandPallete struct {
-	commandId, title, desc, state string
+	commandId, title, desc string
 }
 
 func (c commandPallete) Title() string {
@@ -23,18 +23,15 @@ var commandPalletes = []list.Item{
 		commandId: COMMAND_OPEN_ENV,
 		title:     "Open ENV",
 		desc:      "Open ENV file with default editor",
-		state:     FOCUS_URL,
 	},
 	commandPallete{
 		commandId: COMMAND_OPEN_BODY,
 		title:     "Body",
 		desc:      "Edit request body",
-		state:     FOCUS_URL,
 	},
 	commandPallete{
 		commandId: COMMAND_OPEN_HEADER,
 		title:     "Header",
 		desc:      "Edit request header",
-		state:     FOCUS_URL,
 	},
 }

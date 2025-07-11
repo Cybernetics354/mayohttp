@@ -10,6 +10,7 @@ import (
 
 type State struct {
 	state       string
+	stateStack  []string
 	method      string
 	resSub      chan requestResponse
 	pipeResSub  chan requestPipeResponse
@@ -36,6 +37,7 @@ func InitialModel() State {
 
 	return State{
 		state:       FOCUS_URL,
+		stateStack:  []string{FOCUS_URL},
 		method:      REQUEST_METHOD_GET,
 		resSub:      make(chan requestResponse),
 		pipeResSub:  make(chan requestPipeResponse),
