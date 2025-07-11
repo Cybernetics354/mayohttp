@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,6 +24,8 @@ func (m State) Init() tea.Cmd {
 	return tea.Batch(
 		tea.SetWindowTitle("Mayo HTTP"),
 		tea.EnterAltScreen,
+		checkEnvFile,
+		loadSession(defaultSessionPath),
 		m.spinner.Tick,
 		refreshState,
 		listenResponse(m.resSub),
@@ -33,9 +36,14 @@ func (m State) Init() tea.Cmd {
 func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case checkEnvFileMsg:
+		return m.CheckOrCreateEnvFile()
+	case saveSessionMsg:
+		return m.SaveSession(msg)
+	case loadSessionMsg:
+		return m.LoadSession(msg)
 	case list.FilterMatchesMsg:
-		m.commands, cmd = m.commands.Update(msg)
-		return m, cmd
+		return m.HandleListFilter(msg)
 	case spinner.TickMsg:
 		m.spinner, cmd = m.spinner.Update(msg)
 		return m, cmd
@@ -57,6 +65,14 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.PrevSection()
 	case selectCommandPalleteMsg:
 		return m.SelectCommandPallete()
+	case filterCommandPalleteMsg:
+		m.commands, cmd = m.commands.Update(msg.filter)
+		return m, cmd
+	case selectMethodPalleteMsg:
+		return m.SelectMethodPallete()
+	case filterMethodPalleteMsg:
+		m.methodSelect, cmd = m.methodSelect.Update(msg.filter)
+		return m, cmd
 	case runCommandMsg:
 		return m.RunCommand(msg)
 	case openEnvMsg:
@@ -92,14 +108,34 @@ func (m State) View() string {
 	return m.Render()
 }
 
+func (m *State) HandleListFilter(msg list.FilterMatchesMsg) (tea.Model, tea.Cmd) {
+	switch m.state {
+	case COMMAND_PALLETE:
+		return m, filterCommandPallete(msg)
+	case METHOD_PALLETE:
+		return m, filterMethodPallete(msg)
+	}
+
+	return m, nil
+}
+
 func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
 	m.response.SetValue(msg.res)
-	return m, tea.Batch(hideSpinner, runPipe, listenResponse(m.resSub))
+	return m, tea.Batch(
+		hideSpinner,
+		runPipe,
+		saveSession(defaultSessionPath),
+		listenResponse(m.resSub),
+	)
 }
 
 func (m *State) HandlePipeResult(msg pipeResultMsg) (tea.Model, tea.Cmd) {
 	m.pipedresp.SetValue(msg.res)
-	return m, tea.Batch(hideSpinner, listenPipeResponse(m.pipeResSub))
+	return m, tea.Batch(
+		hideSpinner,
+		saveSession(defaultSessionPath),
+		listenPipeResponse(m.pipeResSub),
+	)
 }
 
 func (m *State) RunRequest() (tea.Model, tea.Cmd) {
@@ -232,6 +268,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.Quit()
 	case key.Matches(msg, keyMaps.Commands):
 		return m, addStack(COMMAND_PALLETE)
+	case key.Matches(msg, keyMaps.Method):
+		return m, addStack(METHOD_PALLETE)
 	case key.Matches(msg, keyMaps.Next):
 		return m, nextSection
 	case key.Matches(msg, keyMaps.Back):
@@ -244,18 +282,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, runPipe
 		case COMMAND_PALLETE:
 			return m, selectCommandPallete
-		}
-
-		if m.state == FOCUS_URL {
-			return m, runRequest
-		}
-
-		if m.state == FOCUS_PIPE {
-			return m, runPipe
-		}
-
-		if m.state == COMMAND_PALLETE {
-			return m, selectCommandPallete
+		case METHOD_PALLETE:
+			return m, selectMethodPallete
 		}
 	}
 
@@ -270,6 +298,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.pipedresp, cmd = m.pipedresp.Update(msg)
 	case COMMAND_PALLETE:
 		m.commands, cmd = m.commands.Update(msg)
+	case METHOD_PALLETE:
+		m.methodSelect, cmd = m.methodSelect.Update(msg)
 	}
 
 	return m, cmd
@@ -313,6 +343,7 @@ func (m *State) PrevSection() (tea.Model, tea.Cmd) {
 
 func (m *State) Quit() (tea.Model, tea.Cmd) {
 	if len(m.stateStack) <= 1 {
+		m.SaveSession(saveSessionMsg{path: defaultSessionPath})
 		return m, tea.Quit
 	}
 
@@ -436,13 +467,28 @@ func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 		return m, popStack
 	}
 
-	return m, tea.Batch(runCommand(i.commandId), popStack)
+	return m, tea.Batch(popStack, runCommand(i.commandId))
+}
+
+func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
+	i, ok := m.methodSelect.SelectedItem().(methodPallete)
+	if !ok {
+		return m, popStack
+	}
+
+	m.method = i.method
+	m.url.Prompt = i.method + " | "
+	return m, popStack
 }
 
 func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 	switch command.commandId {
 	case COMMAND_OPEN_ENV:
-		return m, tea.Batch(openEnv, nil)
+		return m, openEnv
+	case COMMAND_SELECT_METHOD:
+		return m, addStack(METHOD_PALLETE)
+	case COMMAND_SAVE_SESSION:
+		return m, saveSession(defaultSessionPath)
 	default:
 		return m, nil
 	}
@@ -455,4 +501,85 @@ func (m *State) OpenEnv() (tea.Model, tea.Cmd) {
 	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
 		return errMsg(err)
 	})
+}
+
+func (m *State) CheckOrCreateEnvFile() (tea.Model, tea.Cmd) {
+	if _, err := os.Stat(EnvFilePath); err == nil {
+		return m, nil
+	}
+
+	f, err := os.Create(EnvFilePath)
+	if err != nil {
+		fmt.Printf("err: %s", err.Error())
+		return m, tea.Quit
+	}
+
+	defer f.Close()
+	return m, nil
+}
+
+func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
+	session := Session{
+		Url:           m.url.Value(),
+		Pipe:          m.pipe.Value(),
+		PipedResponse: m.pipedresp.Value(),
+		Method:        m.method,
+		Response:      m.response.Value(),
+		Header:        m.header.Value(),
+		Body:          m.body.Value(),
+	}
+
+	f, err := os.Create(msg.path)
+	if err != nil {
+		fmt.Printf("err: %s", err.Error())
+		return m, nil
+	}
+
+	defer f.Close()
+
+	b, err := json.Marshal(session)
+	if err != nil {
+		fmt.Printf("err: %s", err.Error())
+		return m, nil
+	}
+
+	_, err = f.Write(b)
+	if err != nil {
+		fmt.Printf("err: %s", err.Error())
+		return m, nil
+	}
+
+	return m, nil
+}
+
+func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
+	var session Session
+	f, err := os.Open(msg.path)
+	if err != nil {
+		return m, nil
+	}
+
+	defer f.Close()
+
+	b, err := io.ReadAll(f)
+	if err != nil {
+		fmt.Printf("err: %s", err.Error())
+		return m, nil
+	}
+
+	err = json.Unmarshal(b, &session)
+	if err != nil {
+		fmt.Printf("err: %s", err.Error())
+		return m, nil
+	}
+
+	m.url.SetValue(session.Url)
+	m.pipe.SetValue(session.Pipe)
+	m.pipedresp.SetValue(session.PipedResponse)
+	m.method = session.Method
+	m.response.SetValue(session.Response)
+	m.header.SetValue(session.Header)
+	m.body.SetValue(session.Body)
+
+	return m, nil
 }

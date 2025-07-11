@@ -10,13 +10,14 @@ func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 	w, h := m.sw, m.sh
 
 	m.help.Width = w
-	m.url.Width = w - 10
+	m.url.Width = w - 15
 	m.pipe.Width = w - 11
 	m.response.SetWidth(w)
 	m.response.SetHeight(h - 8)
 	m.pipedresp.SetWidth(w)
 	m.pipedresp.SetHeight(h - 8)
 	m.commands.SetSize(w, h)
+	m.methodSelect.SetSize(w, h)
 
 	return m, nil
 }
@@ -25,10 +26,9 @@ func (m *State) Render() string {
 	var str string
 	switch m.state {
 	case COMMAND_PALLETE:
-		str = fmt.Sprintf(
-			"%s",
-			m.commands.View(),
-		)
+		str = m.commands.View()
+	case METHOD_PALLETE:
+		str = m.methodSelect.View()
 	default:
 		str = fmt.Sprintf(
 			"%s\n%s\n%s\n%s%s",

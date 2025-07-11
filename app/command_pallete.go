@@ -34,4 +34,19 @@ var commandPalletes = []list.Item{
 		title:     "Header",
 		desc:      "Edit request header",
 	},
+	commandPallete{
+		commandId: COMMAND_OPEN_HEADER,
+		title:     "Header",
+		desc:      "Edit request header",
+	},
+	commandPallete{
+		commandId: COMMAND_SELECT_METHOD,
+		title:     "Method",
+		desc:      "Select request method",
+	},
+	commandPallete{
+		commandId: COMMAND_SAVE_SESSION,
+		title:     "Save Session",
+		desc:      "Manually save session, in case the session is not automatically saved",
+	},
 }

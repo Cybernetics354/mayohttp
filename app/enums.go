@@ -1,7 +1,6 @@
 package app
 
 const (
-	FOCUS_METHOD    = "focus_method"
 	FOCUS_URL       = "focus_url"
 	FOCUS_RESPONSE  = "focus_response"
 	FOCUS_PIPE      = "focus_pipe"
@@ -9,10 +8,13 @@ const (
 	EDIT_BODY       = "edit_body"
 	EDIT_HEADER     = "edit_header"
 	COMMAND_PALLETE = "command_pallete"
+	METHOD_PALLETE  = "method_pallete"
 
-	COMMAND_OPEN_ENV    = "command_open_env"
-	COMMAND_OPEN_BODY   = "command_open_body"
-	COMMAND_OPEN_HEADER = "command_open_header"
+	COMMAND_OPEN_ENV      = "command_open_env"
+	COMMAND_OPEN_BODY     = "command_open_body"
+	COMMAND_OPEN_HEADER   = "command_open_header"
+	COMMAND_SELECT_METHOD = "command_select_method"
+	COMMAND_SAVE_SESSION  = "command_save_session"
 
 	REQUEST_METHOD_GET     = "GET"
 	REQUEST_METHOD_POST    = "POST"

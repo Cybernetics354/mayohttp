@@ -1,6 +1,19 @@
 package app
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+type checkEnvFileMsg struct{}
+
+type saveSessionMsg struct {
+	path string
+}
+
+type loadSessionMsg struct {
+	path string
+}
 
 type refreshStateMsg struct{}
 
@@ -32,6 +45,16 @@ type setStateMsg struct {
 
 type selectCommandPalleteMsg struct{}
 
+type filterCommandPalleteMsg struct {
+	filter list.FilterMatchesMsg
+}
+
+type selectMethodPalleteMsg struct{}
+
+type filterMethodPalleteMsg struct {
+	filter list.FilterMatchesMsg
+}
+
 type runCommandMsg struct {
 	commandId string
 }
@@ -47,6 +70,10 @@ type pipeResultMsg struct {
 }
 
 type recalculateComponentSizesMsg struct{}
+
+func checkEnvFile() tea.Msg {
+	return checkEnvFileMsg{}
+}
 
 func runRequest() tea.Msg {
 	return runRequestMsg{}
@@ -112,6 +139,22 @@ func selectCommandPallete() tea.Msg {
 	return selectCommandPalleteMsg{}
 }
 
+func filterCommandPallete(msg list.FilterMatchesMsg) tea.Cmd {
+	return func() tea.Msg {
+		return filterCommandPalleteMsg{filter: msg}
+	}
+}
+
+func selectMethodPallete() tea.Msg {
+	return selectMethodPalleteMsg{}
+}
+
+func filterMethodPallete(msg list.FilterMatchesMsg) tea.Cmd {
+	return func() tea.Msg {
+		return filterMethodPalleteMsg{filter: msg}
+	}
+}
+
 func openEnv() tea.Msg {
 	return openEnvMsg{}
 }
@@ -124,4 +167,16 @@ func runCommand(commandId string) tea.Cmd {
 
 func recalculateComponentSizes() tea.Msg {
 	return recalculateComponentSizesMsg{}
+}
+
+func saveSession(path string) tea.Cmd {
+	return func() tea.Msg {
+		return saveSessionMsg{path: path}
+	}
+}
+
+func loadSession(path string) tea.Cmd {
+	return func() tea.Msg {
+		return loadSessionMsg{path: path}
+	}
 }

@@ -20,4 +20,6 @@ var (
 			BorderForeground(blurBorderColor)
 	focusTextareaLineNumber = lipgloss.NewStyle().Foreground(blurBorderColor)
 	blurTextareaLineNumber  = lipgloss.NewStyle().Foreground(blurBorderColor)
+
+	urlPromptStyle = lipgloss.NewStyle().Width(10).Foreground(focusBorderColor)
 )

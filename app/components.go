@@ -16,10 +16,18 @@ func createCommandList() list.Model {
 	return i
 }
 
-func createUrlInput() textinput.Model {
+func createMethodSelect() list.Model {
+	i := list.New(methodPalletes, list.NewDefaultDelegate(), 0, 0)
+	i.Title = "Select Method"
+	i.KeyMap.Quit.SetEnabled(false)
+	return i
+}
+
+func createUrlInput(method string) textinput.Model {
 	i := textinput.New()
 	i.SetValue(debugInitialUrl)
-	i.Prompt = ""
+	i.Prompt = method + " | "
+	i.PromptStyle = urlPromptStyle
 
 	return i
 }
