@@ -39,7 +39,8 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case checkEnvFileMsg:
 		return m.CheckOrCreateEnvFile()
 	case saveSessionMsg:
-		return m.SaveSession(msg)
+		go m.SaveSession(msg)
+		return m, nil
 	case loadSessionMsg:
 		return m.LoadSession(msg)
 	case list.FilterMatchesMsg:
@@ -343,7 +344,7 @@ func (m *State) PrevSection() (tea.Model, tea.Cmd) {
 
 func (m *State) Quit() (tea.Model, tea.Cmd) {
 	if len(m.stateStack) <= 1 {
-		m.SaveSession(saveSessionMsg{path: defaultSessionPath})
+		go m.SaveSession(saveSessionMsg{path: defaultSessionPath})
 		return m, tea.Quit
 	}
 
@@ -478,6 +479,7 @@ func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
 
 	m.method = i.method
 	m.url.Prompt = i.method + " | "
+	m.url.Width = m.sw - 5 - len(m.url.Prompt)
 	return m, popStack
 }
 

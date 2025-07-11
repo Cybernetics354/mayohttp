@@ -4,13 +4,14 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 	w, h := m.sw, m.sh
 
 	m.help.Width = w
-	m.url.Width = w - 15
+	m.url.Width = w - 5 - len(m.url.Prompt)
 	m.pipe.Width = w - 11
 	m.response.SetWidth(w)
 	m.response.SetHeight(h - 8)
@@ -30,13 +31,12 @@ func (m *State) Render() string {
 	case METHOD_PALLETE:
 		str = m.methodSelect.View()
 	default:
-		str = fmt.Sprintf(
-			"%s\n%s\n%s\n%s%s",
+		str = lipgloss.JoinVertical(
+			lipgloss.Top,
 			m.RenderURL(),
 			m.RenderPipe(),
 			m.RenderPipedResponse(),
-			m.RenderSpinner(),
-			m.RenderHelp(),
+			lipgloss.JoinHorizontal(lipgloss.Center, m.RenderSpinner(), m.RenderHelp()),
 		)
 		break
 	}
