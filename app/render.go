@@ -92,7 +92,7 @@ func (m *State) RenderCommandPalletePreview() string {
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(focusBorderColor).
 			Padding(0, 1).
-			Render(str),
+			Render(lipgloss.NewStyle().MaxHeight(m.sh-7).Render(str)),
 	)
 }
 
