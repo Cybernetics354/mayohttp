@@ -49,7 +49,6 @@ func (m *State) Render() string {
 				fmt.Sprintf("ENV(%s)", EnvFilePath),
 			),
 		)
-		break
 	}
 
 	return appStyle.Render(str)

@@ -27,7 +27,6 @@ type State struct {
 	showSpinner  bool
 	help         help.Model
 	keys         keyMap
-	quitting     bool
 	activity     string
 	err          error
 	sw           int

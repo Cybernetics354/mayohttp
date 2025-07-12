@@ -470,7 +470,7 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 
 	dir := filepath.Dir(tempFilePath)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.MkdirAll(dir, 0755)
+		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
 			m.err = err
 			return m, nil
@@ -483,13 +483,16 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	f.WriteString(str)
-	f.Close()
+	defer f.Close()
+	if _, err := f.WriteString(str); err != nil {
+		m.err = err
+		return m, nil
+	}
 
 	editor := getDefaultEditor()
 
 	cmd := exec.Command(editor, tempFilePath)
-	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+	return m, tea.ExecProcess(cmd, func(er error) tea.Msg {
 		/// sometimes the file is not changed yet and when we try to open it
 		/// it still on previous state
 		/// usually happen when you use :wq on vim
@@ -497,13 +500,13 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 
 		f, err := os.Open(tempFilePath)
 		if err != nil {
-			return errMsg(err)
+			return errMsg(er)
 		}
 
 		defer f.Close()
 		b, err := io.ReadAll(f)
 		if err != nil {
-			return errMsg(err)
+			return errMsg(er)
 		}
 
 		str := strings.TrimSpace(string(b))
