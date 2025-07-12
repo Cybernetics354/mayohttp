@@ -16,7 +16,7 @@ func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 	m.response.SetWidth(w)
 	m.response.SetHeight(h - 10)
 	m.pipedresp.SetWidth(w)
-	m.pipedresp.SetHeight(h - 10)
+	m.pipedresp.SetHeight(h - 9)
 	m.commands.SetSize(30, h)
 	m.methodSelect.SetSize(w, h)
 
