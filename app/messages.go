@@ -15,6 +15,11 @@ type loadSessionMsg struct {
 	path string
 }
 
+type setFieldValueMsg struct {
+	state string
+	value string
+}
+
 type refreshStateMsg struct{}
 
 type hideSpinnerMsg struct{}
@@ -207,4 +212,14 @@ func setActivity(activity string) tea.Cmd {
 	return func() tea.Msg {
 		return setActivityMsg{activity: activity}
 	}
+}
+
+func errCmd(err error) tea.Cmd {
+	return func() tea.Msg {
+		return errMsg(err)
+	}
+}
+
+func setFieldValue(field string, value string) tea.Msg {
+	return setFieldValueMsg{state: field, value: value}
 }

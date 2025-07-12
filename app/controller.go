@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -102,6 +101,8 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case setActivityMsg:
 		m.activity = msg.activity
 		return m, nil
+	case setFieldValueMsg:
+		return m.SetFieldValue(msg)
 	case errMsg:
 		return m.HandleErrorMsg(msg)
 	}
@@ -166,19 +167,41 @@ func (m *State) Request() tea.Msg {
 	go parseWithEnv(m.header.Value(), hc)
 
 	url := <-uc
-	body := <-bc
-	header := <-hc
-
-	if url.err != nil || body.err != nil || header.err != nil {
+	if url.err != nil {
 		m.resSub <- requestResultMsg{
 			err: url.err,
-			res: "Failed to parse request with env",
+			res: fmt.Sprintf("URL parse error : %s", url.err.Error()),
+		}
+		return nil
+	}
+
+	body := <-bc
+	if body.err != nil {
+		m.resSub <- requestResultMsg{
+			err: body.err,
+			res: fmt.Sprintf("Body parse error : %s", body.err.Error()),
+		}
+		return nil
+	}
+
+	header := <-hc
+	if header.err != nil {
+		m.resSub <- requestResultMsg{
+			err: header.err,
+			res: fmt.Sprintf("Header parse error : %s", header.err.Error()),
 		}
 		return nil
 	}
 
 	bodyReader := bytes.NewBuffer([]byte(body.str))
 	req, err := http.NewRequest(m.method, url.str, bodyReader)
+	if err != nil {
+		m.resSub <- requestResultMsg{
+			err: err,
+			res: fmt.Sprintf("Request error : %s", err.Error()),
+		}
+		return nil
+	}
 
 	// The header example will look like this:
 	// Header-1: value1
@@ -191,14 +214,6 @@ func (m *State) Request() tea.Msg {
 		}
 
 		req.Header.Add(strings.TrimSpace(header[0]), strings.TrimSpace(header[1]))
-	}
-
-	if err != nil {
-		m.resSub <- requestResultMsg{
-			err: err,
-			res: fmt.Sprintf("Request error : %s", err.Error()),
-		}
-		return nil
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -472,54 +487,54 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
-			m.err = err
-			return m, nil
+			return m, errCmd(err)
 		}
 	}
 
 	f, err := os.Create(tempFilePath)
 	if err != nil {
-		m.err = err
-		return m, nil
+		return m, errCmd(err)
 	}
 
 	defer f.Close()
 	if _, err := f.WriteString(str); err != nil {
-		m.err = err
-		return m, nil
+		return m, errCmd(err)
 	}
 
 	editor := getDefaultEditor()
 
 	cmd := exec.Command(editor, tempFilePath)
-	return m, tea.ExecProcess(cmd, func(er error) tea.Msg {
-		/// sometimes the file is not changed yet and when we try to open it
-		/// it still on previous state
-		/// usually happen when you use :wq on vim
-		time.Sleep(500 * time.Millisecond)
+	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+		if err != nil {
+			return errMsg(err)
+		}
 
 		f, err := os.Open(tempFilePath)
 		if err != nil {
-			return errMsg(er)
+			return errMsg(err)
 		}
 
 		defer f.Close()
 		b, err := io.ReadAll(f)
 		if err != nil {
-			return errMsg(er)
+			return errMsg(err)
 		}
 
 		str := strings.TrimSpace(string(b))
 
-		switch f := m.GetField(msg.state).(type) {
-		case *textarea.Model:
-			f.SetValue(str)
-		case *textinput.Model:
-			f.SetValue(str)
-		}
-
-		return nil
+		return setFieldValue(msg.state, str)
 	})
+}
+
+func (m *State) SetFieldValue(msg setFieldValueMsg) (tea.Model, tea.Cmd) {
+	switch f := m.GetField(msg.state).(type) {
+	case *textarea.Model:
+		f.SetValue(msg.value)
+	case *textinput.Model:
+		f.SetValue(msg.value)
+	}
+
+	return m, setActivity("Set Field Value")
 }
 
 func (m *State) ShowSpinner() (tea.Model, tea.Cmd) {
