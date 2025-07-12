@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -130,7 +129,7 @@ func (m *State) HandleListFilter(msg list.FilterMatchesMsg) (tea.Model, tea.Cmd)
 }
 
 func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
-	m.response.SetValue(msg.res)
+	m.response.SetValue(strings.TrimSpace(msg.res))
 	return m, tea.Batch(
 		hideSpinner,
 		setActivity("Request complete"),
@@ -141,7 +140,7 @@ func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *State) HandlePipeResult(msg pipeResultMsg) (tea.Model, tea.Cmd) {
-	m.pipedresp.SetValue(msg.res)
+	m.pipedresp.SetValue(strings.TrimSpace(msg.res))
 	return m, tea.Batch(
 		hideSpinner,
 		setActivity("Piping complete"),
@@ -213,7 +212,7 @@ func (m *State) Request() tea.Msg {
 
 	defer resp.Body.Close()
 
-	respDump, err := httputil.DumpResponse(resp, true)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		m.resSub <- requestResultMsg{
 			err: err,
@@ -222,14 +221,18 @@ func (m *State) Request() tea.Msg {
 		return nil
 	}
 
-	resStr := fmt.Sprintf(
-		"Request Header\n%s\n\nRequest Body\n%s\n\nResponse\n%s",
-		header.str,
-		body.str,
-		string(respDump),
-	)
+	var resBuffer bytes.Buffer
+	resBuffer.WriteString(header.str + "\n")
+	resBuffer.WriteString(responseSeparator + "\n")
+	resBuffer.WriteString(body.str + "\n")
+	resBuffer.WriteString(responseSeparator + "\n")
+	for k, v := range resp.Header {
+		resBuffer.WriteString(fmt.Sprintf("%s: %s\n", k, v))
+	}
+	resBuffer.WriteString(responseSeparator + "\n")
+	resBuffer.WriteString(string(bodyBytes) + "\n")
 
-	m.resSub <- requestResultMsg{res: resStr}
+	m.resSub <- requestResultMsg{res: resBuffer.String()}
 	return nil
 }
 
@@ -239,8 +242,14 @@ func (m *State) RunPipe() (tea.Model, tea.Cmd) {
 
 func (m *State) PipeRequest() tea.Msg {
 	resp, pipe := m.response.Value(), m.pipe.Value()
-	if resp == "" || pipe == "" {
-		m.pipeResSub <- pipeResultMsg{res: m.response.Value()}
+	if resp == "" {
+		m.pipeResSub <- pipeResultMsg{res: resp}
+		return nil
+	}
+
+	resp = m.resFilter.Filter(resp)
+	if pipe == "" {
+		m.pipeResSub <- pipeResultMsg{res: resp}
 		return nil
 	}
 
@@ -280,6 +289,8 @@ func (m *State) GetField(state string) any {
 		return &m.header
 	case COMMAND_PALLETE:
 		return &m.commands
+	case FOCUS_RESPONSE_FILTER:
+		return &m.resFilter
 	}
 
 	return &m.url
@@ -347,6 +358,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.commands, cmd = m.commands.Update(msg)
 	case METHOD_PALLETE:
 		m.methodSelect, cmd = m.methodSelect.Update(msg)
+	case FOCUS_RESPONSE_FILTER:
+		m.resFilter, cmd = m.resFilter.HandleKeyPress(msg)
 	}
 
 	return m, cmd
@@ -430,11 +443,14 @@ func (m *State) RefreshState() (tea.Model, tea.Cmd) {
 	m.body.Blur()
 	m.header.Blur()
 	m.commands.ResetFilter()
+	m.resFilter.Blur()
 
 	switch f := m.GetFocusedField().(type) {
 	case *textarea.Model:
 		f.Focus()
 	case *textinput.Model:
+		f.Focus()
+	case *ResponseFilter:
 		f.Focus()
 	}
 
@@ -585,6 +601,7 @@ func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
 		Response:      m.response.Value(),
 		Header:        m.header.Value(),
 		Body:          m.body.Value(),
+		ResFilter:     m.resFilter,
 	}
 
 	f, err := os.Create(msg.path)
@@ -638,6 +655,7 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	m.header.SetValue(session.Header)
 	m.body.SetValue(session.Body)
 	m.method = session.Method
+	m.resFilter = session.ResFilter
 	m.url.Prompt = m.method + " | "
 	m.url.Width = m.sw - 5 - len(m.url.Prompt)
 

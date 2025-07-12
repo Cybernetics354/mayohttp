@@ -40,6 +40,11 @@ var commandPalletes = []list.Item{
 		desc:      "Select request method",
 	},
 	commandPallete{
+		commandId: COMMAND_CHANGE_ENV,
+		title:     "Change ENV",
+		desc:      "Select other ENV file",
+	},
+	commandPallete{
 		commandId: COMMAND_SAVE_SESSION,
 		title:     "Save Session",
 		desc:      "Manually save session",

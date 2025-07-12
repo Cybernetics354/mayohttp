@@ -1,6 +1,11 @@
 package app
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 type errMsg error
 
@@ -11,5 +16,6 @@ var (
 	tempFilePath       = "./.mayohttp/temp"
 	debugInitialUrl    = "https://swapi.tech/api/people"
 	defaultSessionPath = "./.mayohttp/session.json"
-	homeLayout         = []string{FOCUS_URL, FOCUS_PIPE, FOCUS_PIPEDRESP}
+	homeLayout         = []string{FOCUS_URL, FOCUS_PIPE, FOCUS_RESPONSE_FILTER, FOCUS_PIPEDRESP}
+	responseSeparator  = fmt.Sprintf("\n%s\n", strings.Repeat("*", 50))
 )

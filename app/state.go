@@ -23,6 +23,7 @@ type State struct {
 	pipe         textinput.Model
 	pipedresp    textarea.Model
 	spinner      spinner.Model
+	resFilter    ResponseFilter
 	showSpinner  bool
 	help         help.Model
 	keys         keyMap
@@ -49,6 +50,7 @@ func InitialModel() State {
 		response:     createResponseTextarea(),
 		pipedresp:    createPipedResponseTextarea(),
 		spinner:      createSpinner(),
+		resFilter:    CreateResponseFilter(),
 		showSpinner:  false,
 		help:         createHelp(),
 		keys:         keyMaps,

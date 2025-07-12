@@ -14,9 +14,9 @@ func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 	m.url.Width = w - 5 - len(m.url.Prompt)
 	m.pipe.Width = w - 11
 	m.response.SetWidth(w)
-	m.response.SetHeight(h - 8)
+	m.response.SetHeight(h - 10)
 	m.pipedresp.SetWidth(w)
-	m.pipedresp.SetHeight(h - 8)
+	m.pipedresp.SetHeight(h - 10)
 	m.commands.SetSize(30, h)
 	m.methodSelect.SetSize(w, h)
 
@@ -35,6 +35,9 @@ func (m *State) Render() string {
 			lipgloss.Top,
 			m.RenderURL(),
 			m.RenderPipe(),
+			lipgloss.NewStyle().PaddingLeft(1).Render(
+				m.resFilter.Render(),
+			),
 			m.RenderPipedResponse(),
 			lipgloss.JoinHorizontal(
 				lipgloss.Center,
@@ -73,7 +76,7 @@ func (m *State) RenderCommandPalletePreview() string {
 	case COMMAND_OPEN_HEADER:
 		str = printval(m.header.Value(), false)
 	case COMMAND_SELECT_METHOD:
-		str = m.method
+		str = "Current method : " + m.method
 	}
 
 	if len(str) <= 0 {
