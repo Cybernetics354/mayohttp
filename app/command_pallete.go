@@ -21,8 +21,8 @@ func (c commandPallete) FilterValue() string {
 var commandPalletes = []list.Item{
 	commandPallete{
 		commandId: COMMAND_OPEN_ENV,
-		title:     "Open ENV",
-		desc:      "Open ENV file with default editor",
+		title:     "ENV",
+		desc:      "Edit ENV file",
 	},
 	commandPallete{
 		commandId: COMMAND_OPEN_BODY,

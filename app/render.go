@@ -17,7 +17,7 @@ func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 	m.response.SetHeight(h - 8)
 	m.pipedresp.SetWidth(w)
 	m.pipedresp.SetHeight(h - 8)
-	m.commands.SetSize(w, h)
+	m.commands.SetSize(30, h)
 	m.methodSelect.SetSize(w, h)
 
 	return m, nil
@@ -27,7 +27,7 @@ func (m *State) Render() string {
 	var str string
 	switch m.state {
 	case COMMAND_PALLETE:
-		str = lipgloss.JoinVertical(lipgloss.Top, m.commands.View())
+		str = m.RenderCommandPallete()
 	case METHOD_PALLETE:
 		str = lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View())
 	default:
@@ -50,6 +50,50 @@ func (m *State) Render() string {
 	}
 
 	return appStyle.Render(str)
+}
+
+func (m *State) RenderCommandPallete() string {
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		m.commands.View(),
+		" ",
+		m.RenderCommandPalletePreview(),
+	)
+}
+
+func (m *State) RenderCommandPalletePreview() string {
+	prevWidth := m.sw - 45
+	var str string
+
+	switch m.commands.SelectedItem().(commandPallete).commandId {
+	case COMMAND_OPEN_ENV:
+		str = printval(EnvFilePath, true)
+	case COMMAND_OPEN_BODY:
+		str = printval(m.body.Value(), false)
+	case COMMAND_OPEN_HEADER:
+		str = printval(m.header.Value(), false)
+	case COMMAND_SELECT_METHOD:
+		str = m.method
+	}
+
+	if len(str) <= 0 {
+		return ""
+	}
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		lipgloss.NewStyle().
+			Background(focusBorderColor).
+			Padding(0, 1).
+			MarginLeft(1).
+			Render("Preview"),
+		lipgloss.NewStyle().
+			Width(prevWidth).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(focusBorderColor).
+			Padding(0, 1).
+			Render(str),
+	)
 }
 
 func (m *State) RenderHelp() string {

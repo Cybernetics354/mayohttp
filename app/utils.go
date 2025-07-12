@@ -40,3 +40,18 @@ func parseWithEnv(str string, c chan parseWithEnvMsg) {
 
 	c <- parseWithEnvMsg{str: strings.TrimSpace(string(url)), err: nil}
 }
+
+func printval(val string, file bool) string {
+	// for now, i plan to use the bat for pretty printing
+	if !file {
+		return val
+	}
+
+	command := exec.Command("cat", val)
+	res, err := command.Output()
+	if err != nil {
+		return ""
+	}
+
+	return string(res)
+}
