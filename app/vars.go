@@ -17,5 +17,5 @@ var (
 	debugInitialUrl    = "https://swapi.tech/api/people"
 	defaultSessionPath = "./.mayohttp/session.json"
 	homeLayout         = []string{FOCUS_URL, FOCUS_PIPE, FOCUS_RESPONSE_FILTER, FOCUS_PIPEDRESP}
-	responseSeparator  = fmt.Sprintf("\n%s\n", strings.Repeat("*", 50))
+	responseSeparator  = fmt.Sprintf("%s", strings.Repeat("=", 50))
 )

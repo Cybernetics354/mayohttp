@@ -607,6 +607,15 @@ func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
 		ResFilter:     m.resFilter,
 	}
 
+	dir := filepath.Dir(msg.path)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.MkdirAll(dir, 0o755)
+		if err != nil {
+			m.err = err
+			return m, nil
+		}
+	}
+
 	f, err := os.Create(msg.path)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
@@ -634,7 +643,7 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	var session Session
 	f, err := os.Open(msg.path)
 	if err != nil {
-		return m, setActivity("Error loading session")
+		return m, setActivity("New Session")
 	}
 
 	defer f.Close()
