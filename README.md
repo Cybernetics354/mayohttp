@@ -1,19 +1,20 @@
-# bubbletea-app-template
+# Mayohttp
 
-A template repository to create [Bubble Tea][bubbletea] apps.
+A TUI HTTP client written in Go with Pipelines on mind.
 
-## Included
+![preview](./readme/preview.png "TUI Preview")
 
-- a sample app that does nothing, so it includes all dependencies:
-	- [Bubble Tea][bubbletea]
-	- [Bubbles][bubbles]
-	- [Lip Gloss][lipgloss]
-- github actions workflows for build, test, lint and release
-- [GoReleaser][goreleaser] configs
-- [golangci-lint][lint] configs
+![piping](./readme/pipe_preview.png "Piping Preview")
 
-[bubbletea]: https://github.com/charmbracelet/bubbletea
-[bubbles]: https://github.com/charmbracelet/bubbles
-[lipgloss]: https://github.com/charmbracelet/lipgloss
-[goreleaser]: https://goreleaser.com
-[lint]: https://golangci-lint.run
+![command pallete](./readme/command_pallete.png "Command Pallete")
+
+![select method](./readme/select_method.png "Select Method")
+
+## Main features
+
+- Terminal pipelines
+- Filtering response before pipe-ing (eg. req header, req body, res header, res body)
+- Sessions
+- Environment file
+- You can use env variables literally on anything (url, pipe, response, header) with $NAME syntax
+- Open / Edit anything with your favorite editor (set the $EDITOR on your environment)
