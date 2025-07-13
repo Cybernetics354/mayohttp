@@ -4,3 +4,4 @@ dist/
 .mayohttp/
 build
 .env*
+*.log
