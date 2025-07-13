@@ -42,7 +42,7 @@ func parseWithEnv(str string, c chan parseWithEnvMsg) {
 }
 
 func printval(val string, file bool) string {
-	// for now, i plan to use the bat for pretty printing
+	// only return as-is for now, i plan to use the bat for pretty printing in near future (or maybe something else if there's better tool)
 	if !file {
 		return val
 	}
@@ -54,4 +54,15 @@ func printval(val string, file bool) string {
 	}
 
 	return string(res)
+}
+
+func logToFile(file string, msg string, errChan chan error) {
+	command := exec.Command("echo", msg, ">>", file)
+
+	if err := command.Run(); err != nil {
+		errChan <- err
+		return
+	}
+
+	errChan <- nil
 }

@@ -316,7 +316,7 @@ func (m *State) GetFocusedField() any {
 }
 
 func (m *State) HandleErrorMsg(msg errMsg) (tea.Model, tea.Cmd) {
-	m.err = msg
+	errLog.Error(msg.Error())
 	return m, nil
 }
 

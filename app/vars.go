@@ -18,4 +18,6 @@ var (
 	defaultSessionPath = "./.mayohttp/session.json"
 	homeLayout         = []string{FOCUS_URL, FOCUS_PIPE, FOCUS_RESPONSE_FILTER, FOCUS_PIPEDRESP}
 	responseSeparator  = fmt.Sprintf("%s", strings.Repeat("=", 50))
+	debugLogPath       = "debug.log"
+	errorDebugLogPath  = "error.log"
 )
