@@ -111,10 +111,6 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m State) View() string {
-	if m.err != nil {
-		return m.err.Error()
-	}
-
 	return m.Render()
 }
 
@@ -193,7 +189,24 @@ func (m *State) Request() tea.Msg {
 		return nil
 	}
 
-	bodyReader := bytes.NewBuffer([]byte(body.str))
+	reqBody := requestBody{raw: body.str}
+	bodyReader, err := reqBody.Buffer()
+	if err != nil {
+		m.resSub <- requestResultMsg{
+			err: err,
+			res: fmt.Sprintf("Invalid body : %s", err.Error()),
+		}
+		return nil
+	}
+
+	if reqBody.form != nil {
+		header.str = fmt.Sprintf(
+			"Content-Type: %s\n%s",
+			reqBody.form.FormDataContentType(),
+			header.str,
+		)
+	}
+
 	req, err := http.NewRequest(m.method, url.str, bodyReader)
 	if err != nil {
 		m.resSub <- requestResultMsg{
@@ -597,13 +610,13 @@ func (m *State) OpenEnv() (tea.Model, tea.Cmd) {
 
 func (m *State) CheckOrCreateEnvFile() (tea.Model, tea.Cmd) {
 	if _, err := os.Stat(EnvFilePath); err == nil {
-		return m, nil
+		return m, errCmd(err)
 	}
 
 	f, err := os.Create(EnvFilePath)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
-		return m, tea.Quit
+		return m, tea.Batch(errCmd(err), tea.Quit)
 	}
 
 	defer f.Close()
@@ -626,29 +639,25 @@ func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
-			m.err = err
-			return m, nil
+			return m, errCmd(err)
 		}
 	}
 
 	f, err := os.Create(msg.path)
 	if err != nil {
-		fmt.Printf("err: %s", err.Error())
-		return m, setActivity("Error saving session")
+		return m, tea.Batch(errCmd(err), setActivity("Error saving session"))
 	}
 
 	defer f.Close()
 
 	b, err := json.Marshal(session)
 	if err != nil {
-		fmt.Printf("err: %s", err.Error())
-		return m, setActivity("Error saving session")
+		return m, tea.Batch(errCmd(err), setActivity("Error saving session"))
 	}
 
 	_, err = f.Write(b)
 	if err != nil {
-		fmt.Printf("err: %s", err.Error())
-		return m, setActivity("Error saving session")
+		return m, tea.Batch(errCmd(err), setActivity("Error saving session"))
 	}
 
 	return m, setActivity("Session saved to " + msg.path)
@@ -658,21 +667,19 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	var session Session
 	f, err := os.Open(msg.path)
 	if err != nil {
-		return m, setActivity("New Session")
+		return m, tea.Batch(errCmd(err), setActivity("Can't find session"))
 	}
 
 	defer f.Close()
 
 	b, err := io.ReadAll(f)
 	if err != nil {
-		fmt.Printf("err: %s", err.Error())
-		return m, setActivity("Error loading session")
+		return m, tea.Batch(errCmd(err), setActivity("Error loading session"))
 	}
 
 	err = json.Unmarshal(b, &session)
 	if err != nil {
-		fmt.Printf("err: %s", err.Error())
-		return m, setActivity("Error loading session")
+		return m, tea.Batch(errCmd(err), setActivity("Error loading session"))
 	}
 
 	m.url.SetValue(session.Url)
