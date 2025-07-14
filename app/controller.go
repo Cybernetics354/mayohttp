@@ -566,7 +566,7 @@ func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 		return m, popStack
 	}
 
-	return m, tea.Batch(popStack, runCommand(i.commandId))
+	return m, runCommand(i.commandId)
 }
 
 func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
@@ -588,7 +588,7 @@ func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 	case COMMAND_SELECT_METHOD:
 		return m, addStack(METHOD_PALLETE)
 	case COMMAND_SAVE_SESSION:
-		return m, saveSession(defaultSessionPath)
+		return m, tea.Batch(saveSession(defaultSessionPath), popStack)
 	case COMMAND_OPEN_BODY:
 		return m, openRequestBody
 	case COMMAND_OPEN_HEADER:

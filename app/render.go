@@ -75,7 +75,9 @@ func (m *State) RenderCommandPalletePreview() string {
 	case COMMAND_OPEN_HEADER:
 		str = printval(m.header.Value(), false)
 	case COMMAND_SELECT_METHOD:
-		str = "Current method : " + m.method
+		str = fmt.Sprintf("Current method : %s", m.method)
+	case COMMAND_CHANGE_ENV:
+		str = fmt.Sprintf("Current ENV : %s", EnvFilePath)
 	}
 
 	if len(str) <= 0 {
