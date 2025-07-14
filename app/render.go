@@ -61,20 +61,21 @@ func (m *State) RenderEnvList() string {
 	prevWidth := m.sw - 45
 	file, ok := m.envList.SelectedItem().(fileItem)
 
-	if !ok {
-		return fmt.Sprint("Render command pallete error ")
+	prev := ""
+	if ok {
+		prev = lipgloss.JoinVertical(
+			lipgloss.Left,
+			previewHeaderStyle.Render("Preview"),
+			previewBodyStyle.Width(prevWidth).
+				Render(lipgloss.NewStyle().MaxHeight(m.sh-7).Render(printval(file.path, true))),
+		)
 	}
 
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		m.envList.View(),
 		" ",
-		lipgloss.JoinVertical(
-			lipgloss.Left,
-			previewHeaderStyle.Render("Preview"),
-			previewBodyStyle.Width(prevWidth).
-				Render(lipgloss.NewStyle().MaxHeight(m.sh-7).Render(printval(file.path, true))),
-		),
+		prev,
 	)
 }
 
@@ -91,7 +92,12 @@ func (m *State) RenderCommandPalletePreview() string {
 	prevWidth := m.sw - 45
 	var str string
 
-	switch m.commands.SelectedItem().(commandPallete).commandId {
+	command, ok := m.commands.SelectedItem().(commandPallete)
+	if !ok {
+		return ""
+	}
+
+	switch command.commandId {
 	case COMMAND_OPEN_ENV:
 		str = printval(EnvFilePath, true)
 	case COMMAND_OPEN_BODY:

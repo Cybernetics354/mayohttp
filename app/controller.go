@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -435,6 +436,21 @@ func (m *State) PrevSection() (tea.Model, tea.Cmd) {
 }
 
 func (m *State) Quit() (tea.Model, tea.Cmd) {
+	if m.commands.FilterState() != list.Unfiltered {
+		m.commands.ResetFilter()
+		return m, nil
+	}
+
+	if m.envList.FilterState() != list.Unfiltered {
+		m.envList.ResetFilter()
+		return m, nil
+	}
+
+	if m.methodSelect.FilterState() != list.Unfiltered {
+		m.methodSelect.ResetFilter()
+		return m, nil
+	}
+
 	if len(m.stateStack) <= 1 {
 		go m.SaveSession(saveSessionMsg{path: defaultSessionPath})
 		return m, tea.Quit
@@ -568,7 +584,7 @@ func (m *State) HideSpinner() (tea.Model, tea.Cmd) {
 func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 	i, ok := m.commands.SelectedItem().(commandPallete)
 	if !ok {
-		return m, popStack
+		return m, errCmd(errors.New("no command selected"))
 	}
 
 	return m, runCommand(i.commandId)
@@ -577,7 +593,7 @@ func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
 	i, ok := m.methodSelect.SelectedItem().(methodPallete)
 	if !ok {
-		return m, popStack
+		return m, errCmd(errors.New("no method selected"))
 	}
 
 	m.method = i.method
@@ -712,7 +728,11 @@ func (m *State) OpenRequestHeader() (tea.Model, tea.Cmd) {
 }
 
 func (m *State) SelectEnv() (tea.Model, tea.Cmd) {
-	file := m.envList.SelectedItem().(fileItem)
+	file, ok := m.envList.SelectedItem().(fileItem)
+	if !ok {
+		return m, errCmd(errors.New("no env selected"))
+	}
+
 	EnvFilePath = file.name
 
 	return m, popStack
