@@ -36,19 +36,18 @@ func (m State) Init() tea.Cmd {
 
 func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case checkEnvFileMsg:
 		return m.CheckOrCreateEnvFile()
 	case saveSessionMsg:
 		go m.SaveSession(msg)
-		return m, nil
 	case loadSessionMsg:
 		return m.LoadSession(msg)
 	case list.FilterMatchesMsg:
 		return m.HandleListFilter(msg)
 	case spinner.TickMsg:
 		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
 	case tea.WindowSizeMsg:
 		return m.HandleWindowChange(msg)
 	case tea.KeyMsg:
@@ -99,14 +98,13 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.RefreshSelectEnv()
 	case setActivityMsg:
 		m.activity = msg.activity
-		return m, nil
 	case setFieldValueMsg:
 		return m.SetFieldValue(msg)
 	case errMsg:
 		return m.HandleErrorMsg(msg)
 	}
 
-	return m, nil
+	return m, cmd
 }
 
 func (m State) View() string {
@@ -221,15 +219,8 @@ func (m *State) Request() tea.Msg {
 	// The header example will look like this:
 	// Header-1: value1
 	// Header-2: value2
-	headers := strings.Split(header.str, "\n")
-	for _, header := range headers {
-		header := strings.SplitN(header, ":", 2)
-		if len(header) != 2 {
-			continue
-		}
-
-		req.Header.Add(strings.TrimSpace(header[0]), strings.TrimSpace(header[1]))
-	}
+	reqHeader := requestHeader{raw: header.str}
+	reqHeader.Apply(req)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
