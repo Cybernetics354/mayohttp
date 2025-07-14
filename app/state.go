@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/Cybernetics354/mayohttp/app/ui"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -41,21 +42,21 @@ func InitialModel() State {
 		method:       REQUEST_METHOD_GET,
 		resSub:       make(chan requestResultMsg),
 		pipeResSub:   make(chan pipeResultMsg),
-		commands:     createCommandList(),
-		methodSelect: createMethodSelect(),
-		body:         createBodyTextarea(),
-		header:       createHeaderTextarea(),
-		url:          createUrlInput(REQUEST_METHOD_GET),
-		pipe:         createPipeInput(),
-		response:     createResponseTextarea(),
-		pipedresp:    createPipedResponseTextarea(),
-		spinner:      createSpinner(),
+		commands:     ui.CommandList(commandPalletes),
+		methodSelect: ui.SelectMethod(methodPalletes),
+		body:         ui.BodyTextarea(),
+		header:       ui.HeaderTextarea(),
+		url:          ui.UrlInput(REQUEST_METHOD_GET, ""),
+		pipe:         ui.PipeInput(),
+		response:     ui.ResponseTextarea(),
+		pipedresp:    ui.PipedResponseTextarea(),
+		spinner:      ui.Spinner(),
+		envList:      ui.EnvList(),
 		resFilter:    CreateResponseFilter(),
 		showSpinner:  false,
-		help:         createHelp(),
+		help:         ui.Help(),
 		keys:         keyMaps,
 		activity:     "Idle",
-		envList:      createEnvList(),
 		sw:           0,
 		sh:           0,
 	}

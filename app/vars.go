@@ -7,8 +7,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type errMsg error
-
 var (
 	appStyle = lipgloss.NewStyle().
 			Padding(1, 1)

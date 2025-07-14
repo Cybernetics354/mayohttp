@@ -13,103 +13,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-func (m State) Init() tea.Cmd {
-	return tea.Batch(
-		tea.SetWindowTitle("Mayo HTTP"),
-		tea.EnterAltScreen,
-		checkEnvFile,
-		loadSession(defaultSessionPath),
-		m.spinner.Tick,
-		refreshState,
-		listenResponse(m.resSub),
-		listenPipeResponse(m.pipeResSub),
-	)
-}
-
-func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-
-	switch msg := msg.(type) {
-	case checkEnvFileMsg:
-		return m.CheckOrCreateEnvFile()
-	case saveSessionMsg:
-		go m.SaveSession(msg)
-	case loadSessionMsg:
-		return m.LoadSession(msg)
-	case list.FilterMatchesMsg:
-		return m.HandleListFilter(msg)
-	case spinner.TickMsg:
-		m.spinner, cmd = m.spinner.Update(msg)
-	case tea.WindowSizeMsg:
-		return m.HandleWindowChange(msg)
-	case tea.KeyMsg:
-		return m.HandleKeyPress(msg)
-	case recalculateComponentSizesMsg:
-		return m.RecalculateComponentSize()
-	case setStateMsg:
-		return m.SetState(msg.state)
-	case addStackMsg:
-		return m.AddStack(msg.state)
-	case popStackMsg:
-		return m.PopStack()
-	case nextSectionMsg:
-		return m.NextSection()
-	case prevSectionMsg:
-		return m.PrevSection()
-	case selectCommandPalleteMsg:
-		return m.SelectCommandPallete()
-	case selectMethodPalleteMsg:
-		return m.SelectMethodPallete()
-	case runCommandMsg:
-		return m.RunCommand(msg)
-	case openEnvMsg:
-		return m.OpenEnv()
-	case openEditorMsg:
-		return m.OpenEditor(msg)
-	case openRequestBodyMsg:
-		return m.OpenRequestBody()
-	case openRequestHeaderMsg:
-		return m.OpenRequestHeader()
-	case hideSpinnerMsg:
-		return m.HideSpinner()
-	case showSpinnerMsg:
-		return m.ShowSpinner()
-	case refreshStateMsg:
-		return m.RefreshState()
-	case runRequestMsg:
-		return m.RunRequest()
-	case runPipeMsg:
-		return m.RunPipe()
-	case requestResultMsg:
-		return m.HandleRequestResult(msg)
-	case pipeResultMsg:
-		return m.HandlePipeResult(msg)
-	case selectEnvMsg:
-		return m.SelectEnv()
-	case refreshSelectEnvMsg:
-		return m.RefreshSelectEnv()
-	case setActivityMsg:
-		m.activity = msg.activity
-	case setFieldValueMsg:
-		return m.SetFieldValue(msg)
-	case errMsg:
-		return m.HandleErrorMsg(msg)
-	}
-
-	return m, cmd
-}
-
-func (m State) View() string {
-	return m.Render()
-}
 
 func (m *State) HandleListFilter(msg list.FilterMatchesMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
@@ -128,26 +36,30 @@ func (m *State) HandleListFilter(msg list.FilterMatchesMsg) (tea.Model, tea.Cmd)
 func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
 	m.response.SetValue(strings.TrimSpace(msg.res))
 	return m, tea.Batch(
-		hideSpinner,
-		setActivity("Request complete"),
-		runPipe,
-		saveSession(defaultSessionPath),
-		listenResponse(m.resSub),
+		sendMsg(hideSpinnerMsg{}),
+		sendMsg(setActivityMsg("Request complete")),
+		sendMsg(runPipeMsg{}),
+		sendMsg(saveSessionMsg{path: defaultSessionPath}),
+		listenResponseCmd(m.resSub),
 	)
 }
 
 func (m *State) HandlePipeResult(msg pipeResultMsg) (tea.Model, tea.Cmd) {
 	m.pipedresp.SetValue(strings.TrimSpace(msg.res))
 	return m, tea.Batch(
-		hideSpinner,
-		setActivity("Piping complete"),
-		saveSession(defaultSessionPath),
-		listenPipeResponse(m.pipeResSub),
+		sendMsg(hideSpinnerMsg{}),
+		sendMsg(setActivityMsg("Piping complete")),
+		sendMsg(saveSessionMsg{path: defaultSessionPath}),
+		listenPipeResponseCmd(m.pipeResSub),
 	)
 }
 
 func (m *State) RunRequest() (tea.Model, tea.Cmd) {
-	return m, tea.Batch(showSpinner, setActivity("Requesting..."), m.Request)
+	return m, tea.Batch(
+		sendMsg(showSpinnerMsg{}),
+		sendMsg(setActivityMsg("Requesting...")),
+		m.Request,
+	)
 }
 
 func (m *State) Request() tea.Msg {
@@ -258,7 +170,11 @@ func (m *State) Request() tea.Msg {
 }
 
 func (m *State) RunPipe() (tea.Model, tea.Cmd) {
-	return m, tea.Batch(showSpinner, setActivity("Piping..."), m.PipeRequest)
+	return m, tea.Batch(
+		sendMsg(showSpinnerMsg{}),
+		sendMsg(setActivityMsg("Piping...")),
+		m.PipeRequest,
+	)
 }
 
 func (m *State) PipeRequest() tea.Msg {
@@ -334,60 +250,7 @@ func (m *State) HandleWindowChange(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	m.sw = cw
 	m.sh = ch
 
-	return m, recalculateComponentSizes
-}
-
-func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-
-	switch {
-	case key.Matches(msg, keyMaps.Open):
-		return m, openEditor(m.state)
-	case key.Matches(msg, keyMaps.Quit):
-		return m.Quit()
-	case key.Matches(msg, keyMaps.Commands):
-		return m, addStack(STATE_COMMAND_PALLETE)
-	case key.Matches(msg, keyMaps.Method):
-		return m, addStack(STATE_METHOD_PALLETE)
-	case key.Matches(msg, keyMaps.Next):
-		return m, nextSection
-	case key.Matches(msg, keyMaps.Back):
-		return m, prevSection
-	case key.Matches(msg, keyMaps.Run):
-		switch m.state {
-		case STATE_FOCUS_URL:
-			return m, runRequest
-		case STATE_FOCUS_PIPE:
-			return m, runPipe
-		case STATE_COMMAND_PALLETE:
-			return m, selectCommandPallete
-		case STATE_METHOD_PALLETE:
-			return m, selectMethodPallete
-		case STATE_SELECT_ENV:
-			return m, selectEnv
-		}
-	}
-
-	switch m.state {
-	case STATE_FOCUS_PIPE:
-		m.pipe, cmd = m.pipe.Update(msg)
-	case STATE_FOCUS_URL:
-		m.url, cmd = m.url.Update(msg)
-	case STATE_FOCUS_RESPONSE:
-		m.response, cmd = m.response.Update(msg)
-	case STATE_FOCUS_PIPEDRESP:
-		m.pipedresp, cmd = m.pipedresp.Update(msg)
-	case STATE_COMMAND_PALLETE:
-		m.commands, cmd = m.commands.Update(msg)
-	case STATE_METHOD_PALLETE:
-		m.methodSelect, cmd = m.methodSelect.Update(msg)
-	case STATE_FOCUS_RESPONSE_FILTER:
-		m.resFilter, cmd = m.resFilter.HandleKeyPress(msg)
-	case STATE_SELECT_ENV:
-		m.envList, cmd = m.envList.Update(msg)
-	}
-
-	return m, cmd
+	return m, sendMsg(recalculateComponentSizesMsg{})
 }
 
 func (m *State) NextSection() (tea.Model, tea.Cmd) {
@@ -405,7 +268,7 @@ func (m *State) NextSection() (tea.Model, tea.Cmd) {
 		break
 	}
 
-	return m, setState(nextState)
+	return m, sendMsg(setStateMsg{state: nextState})
 }
 
 func (m *State) PrevSection() (tea.Model, tea.Cmd) {
@@ -423,7 +286,7 @@ func (m *State) PrevSection() (tea.Model, tea.Cmd) {
 		break
 	}
 
-	return m, setState(prevState)
+	return m, sendMsg(setStateMsg{state: prevState})
 }
 
 func (m *State) Quit() (tea.Model, tea.Cmd) {
@@ -447,14 +310,14 @@ func (m *State) Quit() (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	}
 
-	return m, popStack
+	return m, sendMsg(popStackMsg{})
 }
 
 func (m *State) AddStack(state string) (tea.Model, tea.Cmd) {
 	m.stateStack = append(m.stateStack, state)
 	m.state = state
 
-	return m, refreshState
+	return m, sendMsg(refreshStateMsg{})
 }
 
 func (m *State) PopStack() (tea.Model, tea.Cmd) {
@@ -465,14 +328,14 @@ func (m *State) PopStack() (tea.Model, tea.Cmd) {
 	m.stateStack = m.stateStack[:len(m.stateStack)-1]
 	m.state = m.stateStack[len(m.stateStack)-1]
 
-	return m, refreshState
+	return m, sendMsg(refreshStateMsg{})
 }
 
 func (m *State) SetState(state string) (tea.Model, tea.Cmd) {
 	m.state = state
 	m.stateStack[len(m.stateStack)-1] = state
 
-	return m, refreshState
+	return m, sendMsg(refreshStateMsg{})
 }
 
 func (m *State) RefreshState() (tea.Model, tea.Cmd) {
@@ -512,18 +375,18 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
-			return m, errCmd(err)
+			return m, sendMsg(errMsg(err))
 		}
 	}
 
 	f, err := os.Create(tempFilePath)
 	if err != nil {
-		return m, errCmd(err)
+		return m, sendMsg(errMsg(err))
 	}
 
 	defer f.Close()
 	if _, err := f.WriteString(str); err != nil {
-		return m, errCmd(err)
+		return m, sendMsg(errMsg(err))
 	}
 
 	editor := getDefaultEditor()
@@ -547,7 +410,7 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 
 		str := strings.TrimSpace(string(b))
 
-		return setFieldValue(msg.state, str)
+		return setFieldValueMsg{state: msg.state, value: str}
 	})
 }
 
@@ -559,7 +422,7 @@ func (m *State) SetFieldValue(msg setFieldValueMsg) (tea.Model, tea.Cmd) {
 		f.SetValue(msg.value)
 	}
 
-	return m, setActivity("Set Field Value")
+	return m, sendMsg(setActivityMsg("Set Field Value"))
 }
 
 func (m *State) ShowSpinner() (tea.Model, tea.Cmd) {
@@ -575,38 +438,45 @@ func (m *State) HideSpinner() (tea.Model, tea.Cmd) {
 func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 	i, ok := m.commands.SelectedItem().(commandPallete)
 	if !ok {
-		return m, errCmd(errors.New("no command selected"))
+		return m, sendMsg(errMsg(errors.New("no command selected")))
 	}
 
-	return m, runCommand(i.commandId)
+	return m, sendMsg(runCommandMsg{commandId: i.commandId})
 }
 
 func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
 	i, ok := m.methodSelect.SelectedItem().(methodPallete)
 	if !ok {
-		return m, errCmd(errors.New("no method selected"))
+		return m, sendMsg(errMsg(errors.New("no method selected")))
 	}
 
 	m.method = i.method
 	m.url.Prompt = i.method + " | "
 	m.url.Width = m.sw - 5 - len(m.url.Prompt)
-	return m, popStack
+
+	return m, sendMsg(popStackMsg{})
 }
 
 func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 	switch command.commandId {
 	case COMMAND_OPEN_ENV:
-		return m, openEnv
+		return m, sendMsg(openEnvMsg{})
 	case COMMAND_SELECT_METHOD:
-		return m, addStack(STATE_METHOD_PALLETE)
-	case COMMAND_SAVE_SESSION:
-		return m, tea.Batch(saveSession(defaultSessionPath), popStack)
+		return m, sendMsg(addStackMsg{state: STATE_METHOD_PALLETE})
 	case COMMAND_OPEN_BODY:
-		return m, openRequestBody
+		return m, sendMsg(openRequestBodyMsg{})
 	case COMMAND_OPEN_HEADER:
-		return m, openRequestHeader
+		return m, sendMsg(openRequestHeaderMsg{})
+	case COMMAND_SAVE_SESSION:
+		return m, tea.Batch(
+			sendMsg(saveSessionMsg{path: defaultSessionPath}),
+			sendMsg(popStackMsg{}),
+		)
 	case COMMAND_CHANGE_ENV:
-		return m, tea.Batch(refreshSelectEnv, addStack(STATE_SELECT_ENV))
+		return m, tea.Batch(
+			sendMsg(refreshSelectEnvMsg{}),
+			sendMsg(addStackMsg{state: STATE_SELECT_ENV}),
+		)
 
 	default:
 		return m, nil
@@ -618,19 +488,23 @@ func (m *State) OpenEnv() (tea.Model, tea.Cmd) {
 	cmd := exec.Command(editor, EnvFilePath)
 
 	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return errMsg(err)
+		if err != nil {
+			return errMsg(err)
+		}
+
+		return nil
 	})
 }
 
 func (m *State) CheckOrCreateEnvFile() (tea.Model, tea.Cmd) {
 	if _, err := os.Stat(EnvFilePath); err == nil {
-		return m, errCmd(err)
+		return m, sendMsg(errMsg(err))
 	}
 
 	f, err := os.Create(EnvFilePath)
 	if err != nil {
 		fmt.Printf("err: %s", err.Error())
-		return m, tea.Batch(errCmd(err), tea.Quit)
+		return m, tea.Batch(sendMsg(errMsg(err)), tea.Quit)
 	}
 
 	defer f.Close()
@@ -653,47 +527,65 @@ func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0o755)
 		if err != nil {
-			return m, errCmd(err)
+			return m, sendMsg(errMsg(err))
 		}
 	}
 
 	f, err := os.Create(msg.path)
 	if err != nil {
-		return m, tea.Batch(errCmd(err), setActivity("Error saving session"))
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Error saving session")),
+		)
 	}
 
 	defer f.Close()
 
 	b, err := json.Marshal(session)
 	if err != nil {
-		return m, tea.Batch(errCmd(err), setActivity("Error saving session"))
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Error saving session")),
+		)
 	}
 
 	_, err = f.Write(b)
 	if err != nil {
-		return m, tea.Batch(errCmd(err), setActivity("Error saving session"))
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Error saving session")),
+		)
 	}
 
-	return m, setActivity("Session saved to " + msg.path)
+	return m, sendMsg(setActivityMsg("Session saved to " + msg.path))
 }
 
 func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	var session Session
 	f, err := os.Open(msg.path)
 	if err != nil {
-		return m, tea.Batch(errCmd(err), setActivity("Can't find session"))
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Can't find session")),
+		)
 	}
 
 	defer f.Close()
 
 	b, err := io.ReadAll(f)
 	if err != nil {
-		return m, tea.Batch(errCmd(err), setActivity("Error loading session"))
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Error loading session")),
+		)
 	}
 
 	err = json.Unmarshal(b, &session)
 	if err != nil {
-		return m, tea.Batch(errCmd(err), setActivity("Error loading session"))
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Error loading session")),
+		)
 	}
 
 	m.url.SetValue(session.Url)
@@ -707,32 +599,32 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 	m.url.Prompt = m.method + " | "
 	m.url.Width = m.sw - 5 - len(m.url.Prompt)
 
-	return m, setActivity("Session loaded from " + msg.path)
+	return m, sendMsg(setActivityMsg("Session loaded from " + msg.path))
 }
 
 func (m *State) OpenRequestBody() (tea.Model, tea.Cmd) {
-	return m, tea.Batch(openEditor(STATE_FOCUS_BODY))
+	return m, sendMsg(openEditorMsg{state: STATE_FOCUS_BODY})
 }
 
 func (m *State) OpenRequestHeader() (tea.Model, tea.Cmd) {
-	return m, tea.Batch(openEditor(STATE_FOCUS_HEADER))
+	return m, sendMsg(openEditorMsg{state: STATE_FOCUS_HEADER})
 }
 
 func (m *State) SelectEnv() (tea.Model, tea.Cmd) {
 	file, ok := m.envList.SelectedItem().(fileItem)
 	if !ok {
-		return m, errCmd(errors.New("no env selected"))
+		return m, sendMsg(errMsg(errors.New("no env selected")))
 	}
 
 	EnvFilePath = file.name
 
-	return m, popStack
+	return m, sendMsg(popStackMsg{})
 }
 
 func (m *State) RefreshSelectEnv() (tea.Model, tea.Cmd) {
 	files, err := os.ReadDir(".")
 	if err != nil {
-		return m, errCmd(err)
+		return m, sendMsg(errMsg(err))
 	}
 
 	var fileItems []list.Item

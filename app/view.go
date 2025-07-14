@@ -3,11 +3,15 @@ package app
 import (
 	"fmt"
 
-	tea "github.com/charmbracelet/bubbletea"
+	"github.com/Cybernetics354/mayohttp/app/ui"
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
+func (m State) View() string {
+	return m.Render()
+}
+
+func (m *State) RefreshView() {
 	w, h := m.sw, m.sh
 
 	m.help.Width = w
@@ -20,8 +24,6 @@ func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 	m.commands.SetSize(30, h)
 	m.envList.SetSize(30, h)
 	m.methodSelect.SetSize(w, h)
-
-	return m, nil
 }
 
 func (m *State) Render() string {
@@ -63,11 +65,16 @@ func (m *State) RenderEnvList() string {
 
 	prev := ""
 	if ok {
+		uiPrev := ui.Preview{
+			Header:    "Preview",
+			Width:     prevWidth,
+			MaxHeight: m.sh - 7,
+			Body:      printval(file.path, true),
+		}
+
 		prev = lipgloss.JoinVertical(
 			lipgloss.Left,
-			previewHeaderStyle.Render("Preview"),
-			previewBodyStyle.Width(prevWidth).
-				Render(lipgloss.NewStyle().MaxHeight(m.sh-7).Render(printval(file.path, true))),
+			uiPrev.Render(),
 		)
 	}
 
@@ -114,13 +121,16 @@ func (m *State) RenderCommandPalletePreview() string {
 		return ""
 	}
 
+	preview := ui.Preview{
+		Header:    "Preview",
+		Width:     prevWidth,
+		MaxHeight: m.sh - 7,
+		Body:      str,
+	}
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		previewHeaderStyle.
-			Render("Preview"),
-		previewBodyStyle.
-			Width(prevWidth).
-			Render(lipgloss.NewStyle().MaxHeight(m.sh-7).Render(str)),
+		preview.Render(),
 	)
 }
 
@@ -132,20 +142,20 @@ func (m *State) RenderURL() string {
 	c := m.url.View()
 
 	if m.state == STATE_FOCUS_URL {
-		return focusInputContainer.Render(c)
+		return ui.FocusInputContainer.Render(c)
 	}
 
-	return blurInputContainer.Render(c)
+	return ui.BlurInputContainer.Render(c)
 }
 
 func (m *State) RenderPipe() string {
 	c := m.pipe.View()
 
 	if m.state == STATE_FOCUS_PIPE {
-		return focusInputContainer.Render(c)
+		return ui.FocusInputContainer.Render(c)
 	}
 
-	return blurInputContainer.Render(c)
+	return ui.BlurInputContainer.Render(c)
 }
 
 func (m *State) RenderResponse() string {

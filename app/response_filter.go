@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Cybernetics354/mayohttp/app/ui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 var (
-	focusResponseFilter = lipgloss.NewStyle().Foreground(focusBorderColor)
-	blurResponseFilter  = lipgloss.NewStyle().Foreground(blurBorderColor)
+	focusResponseFilter = lipgloss.NewStyle().Foreground(ui.FocusColor)
+	blurResponseFilter  = lipgloss.NewStyle().Foreground(ui.BlurColor)
 )
 
 type ResponseFilter struct {
@@ -99,7 +100,7 @@ func (r *ResponseFilter) HandleKeyPress(msg tea.KeyMsg) (ResponseFilter, tea.Cmd
 		r.Next()
 	case " ":
 		r.Toggle()
-		cmd = runPipe
+		cmd = sendMsg(runPipeMsg{})
 	}
 
 	return *r, cmd

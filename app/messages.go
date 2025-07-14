@@ -4,6 +4,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type errMsg error
+
 type checkEnvFileMsg struct{}
 
 type saveSessionMsg struct {
@@ -33,9 +35,7 @@ type prevSectionMsg struct{}
 
 type runPipeMsg struct{}
 
-type setActivityMsg struct {
-	activity string
-}
+type setActivityMsg string
 
 type openEditorMsg struct {
 	state string
@@ -81,136 +81,14 @@ type selectEnvMsg struct{}
 
 type recalculateComponentSizesMsg struct{}
 
-func checkEnvFile() tea.Msg {
-	return checkEnvFileMsg{}
-}
-
-func runRequest() tea.Msg {
-	return runRequestMsg{}
-}
-
-func runPipe() tea.Msg {
-	return runPipeMsg{}
-}
-
-func hideSpinner() tea.Msg {
-	return hideSpinnerMsg{}
-}
-
-func showSpinner() tea.Msg {
-	return showSpinnerMsg{}
-}
-
-func refreshState() tea.Msg {
-	return refreshStateMsg{}
-}
-
-func listenResponse(sub chan requestResultMsg) tea.Cmd {
+func listenResponseCmd(sub chan requestResultMsg) tea.Cmd {
 	return func() tea.Msg {
 		return <-sub
 	}
 }
 
-func listenPipeResponse(sub chan pipeResultMsg) tea.Cmd {
+func listenPipeResponseCmd(sub chan pipeResultMsg) tea.Cmd {
 	return func() tea.Msg {
 		return <-sub
 	}
-}
-
-func openEditor(state string) tea.Cmd {
-	return func() tea.Msg {
-		return openEditorMsg{
-			state: state,
-		}
-	}
-}
-
-func addStack(state string) tea.Cmd {
-	return func() tea.Msg {
-		return addStackMsg{state}
-	}
-}
-
-func setState(state string) tea.Cmd {
-	return func() tea.Msg {
-		return setStateMsg{state}
-	}
-}
-
-func popStack() tea.Msg {
-	return popStackMsg{}
-}
-
-func nextSection() tea.Msg {
-	return nextSectionMsg{}
-}
-
-func prevSection() tea.Msg {
-	return prevSectionMsg{}
-}
-
-func selectCommandPallete() tea.Msg {
-	return selectCommandPalleteMsg{}
-}
-
-func selectMethodPallete() tea.Msg {
-	return selectMethodPalleteMsg{}
-}
-
-func openEnv() tea.Msg {
-	return openEnvMsg{}
-}
-
-func runCommand(commandId string) tea.Cmd {
-	return func() tea.Msg {
-		return runCommandMsg{commandId: commandId}
-	}
-}
-
-func recalculateComponentSizes() tea.Msg {
-	return recalculateComponentSizesMsg{}
-}
-
-func saveSession(path string) tea.Cmd {
-	return func() tea.Msg {
-		return saveSessionMsg{path: path}
-	}
-}
-
-func loadSession(path string) tea.Cmd {
-	return func() tea.Msg {
-		return loadSessionMsg{path: path}
-	}
-}
-
-func openRequestBody() tea.Msg {
-	return openRequestBodyMsg{}
-}
-
-func openRequestHeader() tea.Msg {
-	return openRequestHeaderMsg{}
-}
-
-func setActivity(activity string) tea.Cmd {
-	return func() tea.Msg {
-		return setActivityMsg{activity: activity}
-	}
-}
-
-func errCmd(err error) tea.Cmd {
-	return func() tea.Msg {
-		return errMsg(err)
-	}
-}
-
-func setFieldValue(field string, value string) tea.Msg {
-	return setFieldValueMsg{state: field, value: value}
-}
-
-func refreshSelectEnv() tea.Msg {
-	return refreshSelectEnvMsg{}
-}
-
-func selectEnv() tea.Msg {
-	return selectEnvMsg{}
 }

@@ -5,11 +5,19 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type parseWithEnvMsg struct {
 	str string
 	err error
+}
+
+func sendMsg(msg tea.Msg) tea.Cmd {
+	return func() tea.Msg {
+		return msg
+	}
 }
 
 func getDefaultEditor() string {
@@ -54,15 +62,4 @@ func printval(val string, file bool) string {
 	}
 
 	return string(res)
-}
-
-func logToFile(file string, msg string, errChan chan error) {
-	command := exec.Command("echo", msg, ">>", file)
-
-	if err := command.Run(); err != nil {
-		errChan <- err
-		return
-	}
-
-	errChan <- nil
 }
