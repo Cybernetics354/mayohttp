@@ -20,11 +20,6 @@ func (c commandPallete) FilterValue() string {
 
 var commandPalletes = []list.Item{
 	commandPallete{
-		commandId: COMMAND_OPEN_ENV,
-		title:     "ENV",
-		desc:      "Edit ENV file",
-	},
-	commandPallete{
 		commandId: COMMAND_OPEN_BODY,
 		title:     "Body",
 		desc:      "Edit request body",
@@ -38,6 +33,11 @@ var commandPalletes = []list.Item{
 		commandId: COMMAND_SELECT_METHOD,
 		title:     "Method",
 		desc:      "Select request method",
+	},
+	commandPallete{
+		commandId: COMMAND_OPEN_ENV,
+		title:     "ENV",
+		desc:      "Edit ENV file",
 	},
 	commandPallete{
 		commandId: COMMAND_CHANGE_ENV,

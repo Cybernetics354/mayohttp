@@ -66,14 +66,8 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.PrevSection()
 	case selectCommandPalleteMsg:
 		return m.SelectCommandPallete()
-	case filterCommandPalleteMsg:
-		m.commands, cmd = m.commands.Update(msg.filter)
-		return m, cmd
 	case selectMethodPalleteMsg:
 		return m.SelectMethodPallete()
-	case filterMethodPalleteMsg:
-		m.methodSelect, cmd = m.methodSelect.Update(msg.filter)
-		return m, cmd
 	case runCommandMsg:
 		return m.RunCommand(msg)
 	case openEnvMsg:
@@ -98,6 +92,10 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.HandleRequestResult(msg)
 	case pipeResultMsg:
 		return m.HandlePipeResult(msg)
+	case selectEnvMsg:
+		return m.SelectEnv()
+	case refreshSelectEnvMsg:
+		return m.RefreshSelectEnv()
 	case setActivityMsg:
 		m.activity = msg.activity
 		return m, nil
@@ -115,14 +113,17 @@ func (m State) View() string {
 }
 
 func (m *State) HandleListFilter(msg list.FilterMatchesMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	switch m.state {
-	case COMMAND_PALLETE:
-		return m, filterCommandPallete(msg)
-	case METHOD_PALLETE:
-		return m, filterMethodPallete(msg)
+	case STATE_COMMAND_PALLETE:
+		m.commands, cmd = m.commands.Update(msg)
+	case STATE_METHOD_PALLETE:
+		m.methodSelect, cmd = m.methodSelect.Update(msg)
+	case STATE_SELECT_ENV:
+		m.envList, cmd = m.envList.Update(msg)
 	}
 
-	return m, nil
+	return m, cmd
 }
 
 func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
@@ -303,21 +304,21 @@ func (m *State) PipeRequest() tea.Msg {
 
 func (m *State) GetField(state string) any {
 	switch state {
-	case FOCUS_URL:
+	case STATE_FOCUS_URL:
 		return &m.url
-	case FOCUS_PIPE:
+	case STATE_FOCUS_PIPE:
 		return &m.pipe
-	case FOCUS_PIPEDRESP:
+	case STATE_FOCUS_PIPEDRESP:
 		return &m.pipedresp
-	case FOCUS_RESPONSE:
+	case STATE_FOCUS_RESPONSE:
 		return &m.response
-	case FOCUS_BODY:
+	case STATE_FOCUS_BODY:
 		return &m.body
-	case FOCUS_HEADER:
+	case STATE_FOCUS_HEADER:
 		return &m.header
-	case COMMAND_PALLETE:
+	case STATE_COMMAND_PALLETE:
 		return &m.commands
-	case FOCUS_RESPONSE_FILTER:
+	case STATE_FOCUS_RESPONSE_FILTER:
 		return &m.resFilter
 	}
 
@@ -353,41 +354,45 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, keyMaps.Quit):
 		return m.Quit()
 	case key.Matches(msg, keyMaps.Commands):
-		return m, addStack(COMMAND_PALLETE)
+		return m, addStack(STATE_COMMAND_PALLETE)
 	case key.Matches(msg, keyMaps.Method):
-		return m, addStack(METHOD_PALLETE)
+		return m, addStack(STATE_METHOD_PALLETE)
 	case key.Matches(msg, keyMaps.Next):
 		return m, nextSection
 	case key.Matches(msg, keyMaps.Back):
 		return m, prevSection
 	case key.Matches(msg, keyMaps.Run):
 		switch m.state {
-		case FOCUS_URL:
+		case STATE_FOCUS_URL:
 			return m, runRequest
-		case FOCUS_PIPE:
+		case STATE_FOCUS_PIPE:
 			return m, runPipe
-		case COMMAND_PALLETE:
+		case STATE_COMMAND_PALLETE:
 			return m, selectCommandPallete
-		case METHOD_PALLETE:
+		case STATE_METHOD_PALLETE:
 			return m, selectMethodPallete
+		case STATE_SELECT_ENV:
+			return m, selectEnv
 		}
 	}
 
 	switch m.state {
-	case FOCUS_PIPE:
+	case STATE_FOCUS_PIPE:
 		m.pipe, cmd = m.pipe.Update(msg)
-	case FOCUS_URL:
+	case STATE_FOCUS_URL:
 		m.url, cmd = m.url.Update(msg)
-	case FOCUS_RESPONSE:
+	case STATE_FOCUS_RESPONSE:
 		m.response, cmd = m.response.Update(msg)
-	case FOCUS_PIPEDRESP:
+	case STATE_FOCUS_PIPEDRESP:
 		m.pipedresp, cmd = m.pipedresp.Update(msg)
-	case COMMAND_PALLETE:
+	case STATE_COMMAND_PALLETE:
 		m.commands, cmd = m.commands.Update(msg)
-	case METHOD_PALLETE:
+	case STATE_METHOD_PALLETE:
 		m.methodSelect, cmd = m.methodSelect.Update(msg)
-	case FOCUS_RESPONSE_FILTER:
+	case STATE_FOCUS_RESPONSE_FILTER:
 		m.resFilter, cmd = m.resFilter.HandleKeyPress(msg)
+	case STATE_SELECT_ENV:
+		m.envList, cmd = m.envList.Update(msg)
 	}
 
 	return m, cmd
@@ -586,13 +591,15 @@ func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 	case COMMAND_OPEN_ENV:
 		return m, openEnv
 	case COMMAND_SELECT_METHOD:
-		return m, addStack(METHOD_PALLETE)
+		return m, addStack(STATE_METHOD_PALLETE)
 	case COMMAND_SAVE_SESSION:
 		return m, tea.Batch(saveSession(defaultSessionPath), popStack)
 	case COMMAND_OPEN_BODY:
 		return m, openRequestBody
 	case COMMAND_OPEN_HEADER:
 		return m, openRequestHeader
+	case COMMAND_CHANGE_ENV:
+		return m, tea.Batch(refreshSelectEnv, addStack(STATE_SELECT_ENV))
 
 	default:
 		return m, nil
@@ -697,9 +704,37 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *State) OpenRequestBody() (tea.Model, tea.Cmd) {
-	return m, tea.Batch(openEditor(FOCUS_BODY))
+	return m, tea.Batch(openEditor(STATE_FOCUS_BODY))
 }
 
 func (m *State) OpenRequestHeader() (tea.Model, tea.Cmd) {
-	return m, tea.Batch(openEditor(FOCUS_HEADER))
+	return m, tea.Batch(openEditor(STATE_FOCUS_HEADER))
+}
+
+func (m *State) SelectEnv() (tea.Model, tea.Cmd) {
+	file := m.envList.SelectedItem().(fileItem)
+	EnvFilePath = file.name
+
+	return m, popStack
+}
+
+func (m *State) RefreshSelectEnv() (tea.Model, tea.Cmd) {
+	files, err := os.ReadDir(".")
+	if err != nil {
+		return m, errCmd(err)
+	}
+
+	var fileItems []list.Item
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		fileItems = append(fileItems, fileItem{name: file.Name(), path: file.Name()})
+	}
+
+	m.envList.ResetFilter()
+	m.envList.SetItems(fileItems)
+	m.envList.KeyMap.Quit.SetEnabled(false)
+	return m, nil
 }

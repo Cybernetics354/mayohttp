@@ -16,6 +16,13 @@ func createCommandList() list.Model {
 	return i
 }
 
+func createEnvList() list.Model {
+	i := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
+	i.Title = "Select ENV"
+	i.KeyMap.Quit.SetEnabled(false)
+	return i
+}
+
 func createMethodSelect() list.Model {
 	i := list.New(methodPalletes, list.NewDefaultDelegate(), 0, 0)
 	i.Title = "Select Method"

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -60,15 +59,7 @@ type setStateMsg struct {
 
 type selectCommandPalleteMsg struct{}
 
-type filterCommandPalleteMsg struct {
-	filter list.FilterMatchesMsg
-}
-
 type selectMethodPalleteMsg struct{}
-
-type filterMethodPalleteMsg struct {
-	filter list.FilterMatchesMsg
-}
 
 type runCommandMsg struct {
 	commandId string
@@ -83,6 +74,10 @@ type pipeResultMsg struct {
 	err error
 	res string
 }
+
+type refreshSelectEnvMsg struct{}
+
+type selectEnvMsg struct{}
 
 type recalculateComponentSizesMsg struct{}
 
@@ -158,20 +153,8 @@ func selectCommandPallete() tea.Msg {
 	return selectCommandPalleteMsg{}
 }
 
-func filterCommandPallete(msg list.FilterMatchesMsg) tea.Cmd {
-	return func() tea.Msg {
-		return filterCommandPalleteMsg{filter: msg}
-	}
-}
-
 func selectMethodPallete() tea.Msg {
 	return selectMethodPalleteMsg{}
-}
-
-func filterMethodPallete(msg list.FilterMatchesMsg) tea.Cmd {
-	return func() tea.Msg {
-		return filterMethodPalleteMsg{filter: msg}
-	}
 }
 
 func openEnv() tea.Msg {
@@ -222,4 +205,12 @@ func errCmd(err error) tea.Cmd {
 
 func setFieldValue(field string, value string) tea.Msg {
 	return setFieldValueMsg{state: field, value: value}
+}
+
+func refreshSelectEnv() tea.Msg {
+	return refreshSelectEnvMsg{}
+}
+
+func selectEnv() tea.Msg {
+	return selectEnvMsg{}
 }

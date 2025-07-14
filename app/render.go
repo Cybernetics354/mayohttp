@@ -18,6 +18,7 @@ func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 	m.pipedresp.SetWidth(w)
 	m.pipedresp.SetHeight(h - 9)
 	m.commands.SetSize(30, h)
+	m.envList.SetSize(30, h)
 	m.methodSelect.SetSize(w, h)
 
 	return m, nil
@@ -26,10 +27,12 @@ func (m *State) RecalculateComponentSize() (tea.Model, tea.Cmd) {
 func (m *State) Render() string {
 	var str string
 	switch m.state {
-	case COMMAND_PALLETE:
+	case STATE_COMMAND_PALLETE:
 		str = m.RenderCommandPallete()
-	case METHOD_PALLETE:
+	case STATE_METHOD_PALLETE:
 		str = lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View())
+	case STATE_SELECT_ENV:
+		str = m.RenderEnvList()
 	default:
 		str = lipgloss.JoinVertical(
 			lipgloss.Top,
@@ -52,6 +55,27 @@ func (m *State) Render() string {
 	}
 
 	return appStyle.Render(str)
+}
+
+func (m *State) RenderEnvList() string {
+	prevWidth := m.sw - 45
+	file, ok := m.envList.SelectedItem().(fileItem)
+
+	if !ok {
+		return fmt.Sprint("Render command pallete error ")
+	}
+
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		m.envList.View(),
+		" ",
+		lipgloss.JoinVertical(
+			lipgloss.Left,
+			previewHeaderStyle.Render("Preview"),
+			previewBodyStyle.Width(prevWidth).
+				Render(lipgloss.NewStyle().MaxHeight(m.sh-7).Render(printval(file.path, true))),
+		),
+	)
 }
 
 func (m *State) RenderCommandPallete() string {
@@ -86,16 +110,10 @@ func (m *State) RenderCommandPalletePreview() string {
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		lipgloss.NewStyle().
-			Background(focusBorderColor).
-			Padding(0, 1).
-			MarginLeft(1).
+		previewHeaderStyle.
 			Render("Preview"),
-		lipgloss.NewStyle().
+		previewBodyStyle.
 			Width(prevWidth).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(focusBorderColor).
-			Padding(0, 1).
 			Render(lipgloss.NewStyle().MaxHeight(m.sh-7).Render(str)),
 	)
 }
@@ -107,7 +125,7 @@ func (m *State) RenderHelp() string {
 func (m *State) RenderURL() string {
 	c := m.url.View()
 
-	if m.state == FOCUS_URL {
+	if m.state == STATE_FOCUS_URL {
 		return focusInputContainer.Render(c)
 	}
 
@@ -117,7 +135,7 @@ func (m *State) RenderURL() string {
 func (m *State) RenderPipe() string {
 	c := m.pipe.View()
 
-	if m.state == FOCUS_PIPE {
+	if m.state == STATE_FOCUS_PIPE {
 		return focusInputContainer.Render(c)
 	}
 

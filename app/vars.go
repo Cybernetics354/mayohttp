@@ -16,8 +16,13 @@ var (
 	tempFilePath       = "./.mayohttp/temp"
 	debugInitialUrl    = "https://swapi.tech/api/people"
 	defaultSessionPath = "./.mayohttp/session.json"
-	homeLayout         = []string{FOCUS_URL, FOCUS_PIPE, FOCUS_RESPONSE_FILTER, FOCUS_PIPEDRESP}
-	responseSeparator  = fmt.Sprintf("%s", strings.Repeat("=", 50))
-	debugLogPath       = "debug.log"
-	errorDebugLogPath  = "error.log"
+	homeLayout         = []string{
+		STATE_FOCUS_URL,
+		STATE_FOCUS_PIPE,
+		STATE_FOCUS_RESPONSE_FILTER,
+		STATE_FOCUS_PIPEDRESP,
+	}
+	responseSeparator = fmt.Sprintf("%s", strings.Repeat("=", 50))
+	debugLogPath      = "debug.log"
+	errorDebugLogPath = "error.log"
 )

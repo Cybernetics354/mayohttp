@@ -22,4 +22,13 @@ var (
 	blurTextareaLineNumber  = lipgloss.NewStyle().Foreground(blurBorderColor)
 
 	urlPromptStyle = lipgloss.NewStyle().Foreground(focusBorderColor)
+
+	previewHeaderStyle = lipgloss.NewStyle().
+				Background(focusBorderColor).
+				Padding(0, 1).
+				MarginLeft(1)
+	previewBodyStyle = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(focusBorderColor).
+				Padding(0, 1)
 )

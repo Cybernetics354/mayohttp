@@ -1,15 +1,16 @@
 package app
 
 const (
-	FOCUS_URL             = "focus_url"
-	FOCUS_RESPONSE        = "focus_response"
-	FOCUS_PIPE            = "focus_pipe"
-	FOCUS_PIPEDRESP       = "focus_pipedresp"
-	FOCUS_RESPONSE_FILTER = "focus_response_filter"
-	FOCUS_BODY            = "focus_body"
-	FOCUS_HEADER          = "focus_header"
-	COMMAND_PALLETE       = "command_pallete"
-	METHOD_PALLETE        = "method_pallete"
+	STATE_FOCUS_URL             = "state_focus_url"
+	STATE_FOCUS_RESPONSE        = "state_focus_response"
+	STATE_FOCUS_PIPE            = "state_focus_pipe"
+	STATE_FOCUS_PIPEDRESP       = "state_focus_pipedresp"
+	STATE_FOCUS_RESPONSE_FILTER = "state_focus_response_filter"
+	STATE_FOCUS_BODY            = "state_focus_body"
+	STATE_FOCUS_HEADER          = "state_focus_header"
+	STATE_COMMAND_PALLETE       = "state_command_pallete"
+	STATE_METHOD_PALLETE        = "state_method_pallete"
+	STATE_SELECT_ENV            = "state_select_env"
 
 	COMMAND_OPEN_ENV      = "command_open_env"
 	COMMAND_CHANGE_ENV    = "command_change_env"

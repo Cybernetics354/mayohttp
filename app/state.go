@@ -28,6 +28,7 @@ type State struct {
 	help         help.Model
 	keys         keyMap
 	activity     string
+	envList      list.Model
 	err          error
 	sw           int
 	sh           int
@@ -35,8 +36,8 @@ type State struct {
 
 func InitialModel() State {
 	return State{
-		state:        FOCUS_URL,
-		stateStack:   []string{FOCUS_URL},
+		state:        STATE_FOCUS_URL,
+		stateStack:   []string{STATE_FOCUS_URL},
 		method:       REQUEST_METHOD_GET,
 		resSub:       make(chan requestResultMsg),
 		pipeResSub:   make(chan pipeResultMsg),
@@ -54,6 +55,7 @@ func InitialModel() State {
 		help:         createHelp(),
 		keys:         keyMaps,
 		activity:     "Idle",
+		envList:      createEnvList(),
 		sw:           0,
 		sh:           0,
 	}
