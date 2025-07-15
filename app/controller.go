@@ -19,6 +19,30 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+func (m *State) Setup() (tea.Model, tea.Cmd) {
+	// check whether the config folder exists
+	if _, err := os.Stat(configFolder); os.IsNotExist(err) {
+		err = os.MkdirAll(configFolder, 0o755)
+		if err != nil {
+			return m, sendMsg(errMsg(err))
+		}
+	}
+
+	var saveCmd tea.Cmd
+	if _, err := os.Stat(defaultSessionPath); os.IsNotExist(err) {
+		saveCmd = sendMsg(saveSessionMsg{path: defaultSessionPath})
+	}
+
+	return m, tea.Batch(
+		saveCmd,
+		sendMsg(checkEnvFileMsg{}),
+		sendMsg(loadSessionMsg{path: defaultSessionPath}),
+		sendMsg(refreshStateMsg{}),
+		listenResponseCmd(m.resSub),
+		listenPipeResponseCmd(m.pipeResSub),
+	)
+}
+
 func (m *State) HandleListFilter(msg list.FilterMatchesMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch m.state {

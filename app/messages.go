@@ -12,6 +12,8 @@ type saveSessionMsg struct {
 	path string
 }
 
+type setupMsg struct{}
+
 type loadSessionMsg struct {
 	path string
 }

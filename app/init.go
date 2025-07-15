@@ -7,10 +7,6 @@ func (m State) Init() tea.Cmd {
 		tea.SetWindowTitle("MayoHTTP"),
 		tea.EnterAltScreen,
 		m.spinner.Tick,
-		sendMsg(checkEnvFileMsg{}),
-		sendMsg(loadSessionMsg{path: defaultSessionPath}),
-		sendMsg(refreshStateMsg{}),
-		listenResponseCmd(m.resSub),
-		listenPipeResponseCmd(m.pipeResSub),
+		sendMsg(setupMsg{}),
 	)
 }

@@ -25,6 +25,10 @@ func (r *requestBody) Buffer() (*bytes.Buffer, error) {
 }
 
 func (r *requestBody) ReqType() string {
+	if len(r.raw) == 0 {
+		return REQUEST_BODY_RAW_SYMBOL
+	}
+
 	return strings.TrimSpace(r.raw[0:strings.Index(r.raw, "\n")])
 }
 

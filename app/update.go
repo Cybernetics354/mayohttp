@@ -10,6 +10,8 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var command tea.Cmd
 
 	switch msg := msg.(type) {
+	case setupMsg:
+		return m.Setup()
 	case checkEnvFileMsg:
 		return m.CheckOrCreateEnvFile()
 	case saveSessionMsg:
