@@ -460,6 +460,14 @@ func (m *State) HideSpinner() (tea.Model, tea.Cmd) {
 }
 
 func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
+	if m.commands.FilterState() == list.Filtering {
+		var cmd tea.Cmd
+		m.commands, cmd = m.commands.Update(tea.KeyMsg{
+			Type: tea.KeyEnter,
+		})
+		return m, cmd
+	}
+
 	i, ok := m.commands.SelectedItem().(commandPallete)
 	if !ok {
 		return m, sendMsg(errMsg(errors.New("no command selected")))
@@ -469,6 +477,14 @@ func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 }
 
 func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
+	if m.methodSelect.FilterState() == list.Filtering {
+		var cmd tea.Cmd
+		m.methodSelect, cmd = m.methodSelect.Update(tea.KeyMsg{
+			Type: tea.KeyEnter,
+		})
+		return m, cmd
+	}
+
 	i, ok := m.methodSelect.SelectedItem().(methodPallete)
 	if !ok {
 		return m, sendMsg(errMsg(errors.New("no method selected")))
@@ -635,6 +651,14 @@ func (m *State) OpenRequestHeader() (tea.Model, tea.Cmd) {
 }
 
 func (m *State) SelectEnv() (tea.Model, tea.Cmd) {
+	if m.envList.FilterState() == list.Filtering {
+		var cmd tea.Cmd
+		m.envList, cmd = m.envList.Update(tea.KeyMsg{
+			Type: tea.KeyEnter,
+		})
+		return m, cmd
+	}
+
 	file, ok := m.envList.SelectedItem().(fileItem)
 	if !ok {
 		return m, sendMsg(errMsg(errors.New("no env selected")))
