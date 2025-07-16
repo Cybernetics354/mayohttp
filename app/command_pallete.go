@@ -45,8 +45,13 @@ var commandPalletes = []list.Item{
 		desc:      "Select other ENV file",
 	},
 	commandPallete{
+		commandId: COMMAND_OPEN_SESSION_LIST,
+		title:     "Open Session",
+		desc:      "Select from collection",
+	},
+	commandPallete{
 		commandId: COMMAND_SAVE_SESSION,
 		title:     "Save Session",
-		desc:      "Manually save session",
+		desc:      "Save as collection",
 	},
 }

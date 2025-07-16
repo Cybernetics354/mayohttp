@@ -12,6 +12,7 @@ var (
 			Padding(1, 1)
 	EnvFilePath        = ".env"
 	configFolder       = "./.mayohttp"
+	collectionFolder   = fmt.Sprintf("%s/collections", configFolder)
 	tempFilePath       = fmt.Sprintf("%s/temp", configFolder)
 	defaultSessionPath = fmt.Sprintf("%s/session.json", configFolder)
 	// debugLogPath       = fmt.Sprintf("%s/debug.log", configFolder)

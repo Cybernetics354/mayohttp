@@ -18,6 +18,10 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		go m.SaveSession(msg)
 	case loadSessionMsg:
 		return m.LoadSession(msg)
+	case loadSessionListMsg:
+		return m.LoadSessionList()
+	case replaceCurrentSessionMsg:
+		return m.ReplaceCurrentSession(msg)
 	case list.FilterMatchesMsg:
 		return m.HandleListFilter(msg)
 	case spinner.TickMsg:
@@ -34,6 +38,8 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.AddStack(msg.state)
 	case popStackMsg:
 		return m.PopStack()
+	case popStackRootMsg:
+		return m.PopStackRoot()
 	case nextSectionMsg:
 		return m.NextSection()
 	case prevSectionMsg:
@@ -68,6 +74,8 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.HandlePipeResult(msg)
 	case selectEnvMsg:
 		return m.SelectEnv()
+	case selectSessionItemMsg:
+		return m.SelectSessionItem()
 	case refreshSelectEnvMsg:
 		return m.RefreshSelectEnv()
 	case setActivityMsg:

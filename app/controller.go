@@ -2,7 +2,6 @@ package app
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -52,6 +51,8 @@ func (m *State) HandleListFilter(msg list.FilterMatchesMsg) (tea.Model, tea.Cmd)
 		m.methodSelect, cmd = m.methodSelect.Update(msg)
 	case STATE_SELECT_ENV:
 		m.envList, cmd = m.envList.Update(msg)
+	case STATE_SELECT_SESSION, STATE_SAVE_SESSION:
+		m.sessionList, cmd = m.sessionList.Update(msg)
 	}
 
 	return m, cmd
@@ -329,6 +330,11 @@ func (m *State) Quit() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	if m.sessionList.FilterState() != list.Unfiltered {
+		m.sessionList.ResetFilter()
+		return m, nil
+	}
+
 	if len(m.stateStack) <= 1 {
 		go m.SaveSession(saveSessionMsg{path: defaultSessionPath})
 		return m, tea.Quit
@@ -350,6 +356,17 @@ func (m *State) PopStack() (tea.Model, tea.Cmd) {
 	}
 
 	m.stateStack = m.stateStack[:len(m.stateStack)-1]
+	m.state = m.stateStack[len(m.stateStack)-1]
+
+	return m, sendMsg(refreshStateMsg{})
+}
+
+func (m *State) PopStackRoot() (tea.Model, tea.Cmd) {
+	if len(m.stateStack) <= 1 {
+		return m, nil
+	}
+
+	m.stateStack = []string{m.stateStack[0]}
 	m.state = m.stateStack[len(m.stateStack)-1]
 
 	return m, sendMsg(refreshStateMsg{})
@@ -509,8 +526,13 @@ func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 		return m, sendMsg(openRequestHeaderMsg{})
 	case COMMAND_SAVE_SESSION:
 		return m, tea.Batch(
-			sendMsg(saveSessionMsg{path: defaultSessionPath}),
-			sendMsg(popStackMsg{}),
+			sendMsg(loadSessionListMsg{}),
+			sendMsg(addStackMsg{state: STATE_SAVE_SESSION}),
+		)
+	case COMMAND_OPEN_SESSION_LIST:
+		return m, tea.Batch(
+			sendMsg(loadSessionListMsg{}),
+			sendMsg(addStackMsg{state: STATE_SELECT_SESSION}),
 		)
 	case COMMAND_CHANGE_ENV:
 		return m, tea.Batch(
@@ -551,45 +573,21 @@ func (m *State) CheckOrCreateEnvFile() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m *State) ReplaceCurrentSession(msg replaceCurrentSessionMsg) (tea.Model, tea.Cmd) {
+	_, err := openSessionFromPath(msg.path)
+	if err != nil {
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Can't load session on "+msg.path)),
+		)
+	}
+
+	return m, sendMsg(loadSessionMsg{path: msg.path})
+}
+
 func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
-	session := Session{
-		Url:           m.url.Value(),
-		Pipe:          m.pipe.Value(),
-		PipedResponse: m.pipedresp.Value(),
-		Method:        m.method,
-		Response:      m.response.Value(),
-		Header:        m.header.Value(),
-		Body:          m.body.Value(),
-		ResFilter:     m.resFilter,
-	}
-
-	dir := filepath.Dir(msg.path)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.MkdirAll(dir, 0o755)
-		if err != nil {
-			return m, sendMsg(errMsg(err))
-		}
-	}
-
-	f, err := os.Create(msg.path)
-	if err != nil {
-		return m, tea.Batch(
-			sendMsg(errMsg(err)),
-			sendMsg(setActivityMsg("Error saving session")),
-		)
-	}
-
-	defer f.Close()
-
-	b, err := json.Marshal(session)
-	if err != nil {
-		return m, tea.Batch(
-			sendMsg(errMsg(err)),
-			sendMsg(setActivityMsg("Error saving session")),
-		)
-	}
-
-	_, err = f.Write(b)
+	session := createSessionFromState(m)
+	err := session.Save(msg.path)
 	if err != nil {
 		return m, tea.Batch(
 			sendMsg(errMsg(err)),
@@ -601,45 +599,48 @@ func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
-	var session Session
-	f, err := os.Open(msg.path)
+	session, err := openSessionFromPath(msg.path)
 	if err != nil {
 		return m, tea.Batch(
 			sendMsg(errMsg(err)),
-			sendMsg(setActivityMsg("Can't find session")),
+			sendMsg(setActivityMsg("Can't load session")),
 		)
 	}
 
-	defer f.Close()
-
-	b, err := io.ReadAll(f)
-	if err != nil {
-		return m, tea.Batch(
-			sendMsg(errMsg(err)),
-			sendMsg(setActivityMsg("Error loading session")),
-		)
-	}
-
-	err = json.Unmarshal(b, &session)
-	if err != nil {
-		return m, tea.Batch(
-			sendMsg(errMsg(err)),
-			sendMsg(setActivityMsg("Error loading session")),
-		)
-	}
-
-	m.url.SetValue(session.Url)
-	m.pipe.SetValue(session.Pipe)
-	m.pipedresp.SetValue(session.PipedResponse)
-	m.response.SetValue(session.Response)
-	m.header.SetValue(session.Header)
-	m.body.SetValue(session.Body)
-	m.method = session.Method
-	m.resFilter = session.ResFilter
-	m.url.Prompt = m.method + " | "
-	m.url.Width = m.sw - 5 - len(m.url.Prompt)
+	session.Apply(m)
 
 	return m, sendMsg(setActivityMsg("Session loaded from " + msg.path))
+}
+
+func (m *State) LoadSessionList() (tea.Model, tea.Cmd) {
+	if _, err := os.Stat(collectionFolder); os.IsNotExist(err) {
+		return m, sendMsg(errMsg(err))
+	}
+
+	files, err := os.ReadDir(collectionFolder)
+	if err != nil {
+		return m, sendMsg(errMsg(err))
+	}
+
+	var sessionItems []list.Item
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		session, err := openSessionFromPath(fmt.Sprintf("%s/%s", collectionFolder, file.Name()))
+		if err != nil {
+			continue
+		}
+
+		sessionItems = append(sessionItems, SessionItem{name: file.Name(), session: session})
+	}
+
+	m.sessionList.ResetFilter()
+	m.sessionList.SetItems(sessionItems)
+	m.sessionList.KeyMap.Quit.SetEnabled(false)
+
+	return m, nil
 }
 
 func (m *State) OpenRequestBody() (tea.Model, tea.Cmd) {
@@ -687,5 +688,32 @@ func (m *State) RefreshSelectEnv() (tea.Model, tea.Cmd) {
 	m.envList.ResetFilter()
 	m.envList.SetItems(fileItems)
 	m.envList.KeyMap.Quit.SetEnabled(false)
+	return m, nil
+}
+
+func (m *State) SelectSessionItem() (tea.Model, tea.Cmd) {
+	if m.sessionList.FilterState() == list.Filtering {
+		var cmd tea.Cmd
+		m.sessionList, cmd = m.sessionList.Update(tea.KeyMsg{
+			Type: tea.KeyEnter,
+		})
+		return m, cmd
+	}
+
+	i, ok := m.sessionList.SelectedItem().(SessionItem)
+	if !ok {
+		return m, sendMsg(errMsg(errors.New("no session selected")))
+	}
+
+	switch m.state {
+	case STATE_SAVE_SESSION:
+		return m, tea.Batch(sendMsg(saveSessionMsg{path: i.Path()}), sendMsg(popStackRootMsg{}))
+	case STATE_SELECT_SESSION:
+		return m, tea.Batch(
+			sendMsg(replaceCurrentSessionMsg{path: i.Path()}),
+			sendMsg(popStackRootMsg{}),
+		)
+	}
+
 	return m, nil
 }

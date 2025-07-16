@@ -1,6 +1,8 @@
 package app
 
 import (
+	"slices"
+
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -8,20 +10,25 @@ import (
 func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
+	if slices.Contains(homeLayout, m.state) {
+		switch {
+		case key.Matches(msg, homeMapping.Open):
+			return m, sendMsg(openEditorMsg{state: m.state})
+		case key.Matches(msg, homeMapping.Commands):
+			return m, sendMsg(addStackMsg{state: STATE_COMMAND_PALLETE})
+		case key.Matches(msg, homeMapping.Method):
+			return m, sendMsg(addStackMsg{state: STATE_METHOD_PALLETE})
+		case key.Matches(msg, homeMapping.Next):
+			return m, sendMsg(nextSectionMsg{})
+		case key.Matches(msg, homeMapping.Back):
+			return m, sendMsg(prevSectionMsg{})
+		}
+	}
+
 	switch {
-	case key.Matches(msg, keyMaps.Open):
-		return m, sendMsg(openEditorMsg{state: m.state})
-	case key.Matches(msg, keyMaps.Quit):
+	case key.Matches(msg, homeMapping.Quit):
 		return m.Quit()
-	case key.Matches(msg, keyMaps.Commands):
-		return m, sendMsg(addStackMsg{state: STATE_COMMAND_PALLETE})
-	case key.Matches(msg, keyMaps.Method):
-		return m, sendMsg(addStackMsg{state: STATE_METHOD_PALLETE})
-	case key.Matches(msg, keyMaps.Next):
-		return m, sendMsg(nextSectionMsg{})
-	case key.Matches(msg, keyMaps.Back):
-		return m, sendMsg(prevSectionMsg{})
-	case key.Matches(msg, keyMaps.Run):
+	case key.Matches(msg, homeMapping.Run):
 		switch m.state {
 		case STATE_FOCUS_URL:
 			return m, sendMsg(runRequestMsg{})
@@ -31,6 +38,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, sendMsg(selectCommandPalleteMsg{})
 		case STATE_METHOD_PALLETE:
 			return m, sendMsg(selectMethodPalleteMsg{})
+		case STATE_SELECT_SESSION, STATE_SAVE_SESSION:
+			return m, sendMsg(selectSessionItemMsg{})
 		case STATE_SELECT_ENV:
 			return m, sendMsg(selectEnvMsg{})
 		}
@@ -53,6 +62,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.resFilter, cmd = m.resFilter.HandleKeyPress(msg)
 	case STATE_SELECT_ENV:
 		m.envList, cmd = m.envList.Update(msg)
+	case STATE_SELECT_SESSION, STATE_SAVE_SESSION:
+		m.sessionList, cmd = m.sessionList.Update(msg)
 	}
 
 	return m, cmd

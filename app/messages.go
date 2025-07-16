@@ -12,7 +12,13 @@ type saveSessionMsg struct {
 	path string
 }
 
+type replaceCurrentSessionMsg struct {
+	path string
+}
+
 type setupMsg struct{}
+
+type loadSessionListMsg struct{}
 
 type loadSessionMsg struct {
 	path string
@@ -55,9 +61,13 @@ type addStackMsg struct {
 
 type popStackMsg struct{}
 
+type popStackRootMsg struct{}
+
 type setStateMsg struct {
 	state string
 }
+
+type selectSessionItemMsg struct{}
 
 type selectCommandPalleteMsg struct{}
 

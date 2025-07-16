@@ -14,6 +14,8 @@ func (m State) View() string {
 func (m *State) RefreshView() {
 	w, h := m.sw, m.sh
 
+	lh := h - 1
+
 	m.help.Width = w
 	m.url.Width = w - 5 - len(m.url.Prompt)
 	m.pipe.Width = w - 11
@@ -21,8 +23,9 @@ func (m *State) RefreshView() {
 	m.response.SetHeight(h - 10)
 	m.pipedresp.SetWidth(w)
 	m.pipedresp.SetHeight(h - 9)
-	m.commands.SetSize(30, h)
-	m.envList.SetSize(30, h)
+	m.commands.SetSize(ui.ListWidth, lh)
+	m.envList.SetSize(ui.ListWidth, lh)
+	m.sessionList.SetSize(ui.ListWidth, lh)
 	m.methodSelect.SetSize(w, h)
 }
 
@@ -30,11 +33,13 @@ func (m *State) Render() string {
 	var str string
 	switch m.state {
 	case STATE_COMMAND_PALLETE:
-		str = m.RenderCommandPallete()
+		str = m.RenderWithListHelp(m.RenderCommandPallete())
 	case STATE_METHOD_PALLETE:
 		str = lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View())
 	case STATE_SELECT_ENV:
-		str = m.RenderEnvList()
+		str = m.RenderWithListHelp(m.RenderEnvList())
+	case STATE_SELECT_SESSION, STATE_SAVE_SESSION, STATE_SAVE_SESSION_INPUT:
+		str = m.RenderWithListHelp(m.RenderSessionList())
 	default:
 		str = lipgloss.JoinVertical(
 			lipgloss.Top,
@@ -59,16 +64,62 @@ func (m *State) Render() string {
 	return appStyle.Render(str)
 }
 
+func (m *State) PreviewSize() (int, int) {
+	return m.sw - ui.ListPreviewWidthMargin, m.sh - 7
+}
+
+func (m *State) RenderSessionList() string {
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		ui.ListContainer.Render(m.sessionList.View()),
+		" ",
+		m.RenderSessionListPreview(),
+	)
+}
+
+func (m *State) RenderSessionListPreview() string {
+	pw, ph := m.PreviewSize()
+	item, ok := m.sessionList.SelectedItem().(SessionItem)
+	if !ok {
+		return ""
+	}
+
+	str := lipgloss.JoinVertical(
+		lipgloss.Left,
+		lipgloss.JoinHorizontal(lipgloss.Top, item.session.Method, " : ", item.session.Url),
+		lipgloss.JoinHorizontal(lipgloss.Top, "PIPE : ", item.session.Pipe),
+		item.session.PipedResponse,
+	)
+
+	preview := ui.Preview{
+		Header:    "Preview",
+		Width:     pw,
+		MaxHeight: ph,
+		Body:      str,
+	}
+
+	return preview.Render()
+}
+
 func (m *State) RenderEnvList() string {
-	prevWidth := m.sw - 45
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		ui.ListContainer.Render(m.envList.View()),
+		" ",
+		m.RenderEnvListPreview(),
+	)
+}
+
+func (m *State) RenderEnvListPreview() string {
+	pw, ph := m.PreviewSize()
 	file, ok := m.envList.SelectedItem().(fileItem)
 
 	prev := ""
 	if ok {
 		uiPrev := ui.Preview{
 			Header:    "Preview",
-			Width:     prevWidth,
-			MaxHeight: m.sh - 7,
+			Width:     pw,
+			MaxHeight: ph,
 			Body:      printval(file.path, true),
 		}
 
@@ -78,25 +129,20 @@ func (m *State) RenderEnvList() string {
 		)
 	}
 
-	return lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		m.envList.View(),
-		" ",
-		prev,
-	)
+	return prev
 }
 
 func (m *State) RenderCommandPallete() string {
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		m.commands.View(),
+		ui.ListContainer.Render(m.commands.View()),
 		" ",
 		m.RenderCommandPalletePreview(),
 	)
 }
 
 func (m *State) RenderCommandPalletePreview() string {
-	prevWidth := m.sw - 45
+	pw, ph := m.PreviewSize()
 	var str string
 
 	command, ok := m.commands.SelectedItem().(commandPallete)
@@ -123,8 +169,8 @@ func (m *State) RenderCommandPalletePreview() string {
 
 	preview := ui.Preview{
 		Header:    "Preview",
-		Width:     prevWidth,
-		MaxHeight: m.sh - 7,
+		Width:     pw,
+		MaxHeight: ph,
 		Body:      str,
 	}
 
@@ -136,6 +182,10 @@ func (m *State) RenderCommandPalletePreview() string {
 
 func (m *State) RenderHelp() string {
 	return m.help.View(m.keys)
+}
+
+func (m *State) RenderWithListHelp(body string) string {
+	return lipgloss.JoinVertical(lipgloss.Left, body, m.help.View(listMapping))
 }
 
 func (m *State) RenderURL() string {

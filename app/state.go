@@ -17,6 +17,7 @@ type State struct {
 	resSub       chan requestResultMsg
 	pipeResSub   chan pipeResultMsg
 	commands     list.Model
+	sessionList  list.Model
 	url          textinput.Model
 	response     textarea.Model
 	body         textarea.Model
@@ -27,7 +28,7 @@ type State struct {
 	resFilter    ResponseFilter
 	showSpinner  bool
 	help         help.Model
-	keys         keyMap
+	keys         homeKeymap
 	activity     string
 	envList      list.Model
 	err          error
@@ -43,6 +44,7 @@ func InitialModel() State {
 		resSub:       make(chan requestResultMsg),
 		pipeResSub:   make(chan pipeResultMsg),
 		commands:     ui.CommandList(commandPalletes),
+		sessionList:  ui.SessionList(),
 		methodSelect: ui.SelectMethod(methodPalletes),
 		body:         ui.BodyTextarea(),
 		header:       ui.HeaderTextarea(),
@@ -55,7 +57,7 @@ func InitialModel() State {
 		resFilter:    CreateResponseFilter(),
 		showSpinner:  false,
 		help:         ui.Help(),
-		keys:         keyMaps,
+		keys:         homeMapping,
 		activity:     "Idle",
 		sw:           0,
 		sh:           0,

@@ -7,6 +7,10 @@ var (
 	FocusColor  = lipgloss.Color("205")
 	BlurColor   = lipgloss.Color("243")
 
+	ListWidth              = 35
+	ListPreviewWidthMargin = ListWidth + 5
+	ListContainer          = lipgloss.NewStyle().Width(ListWidth)
+
 	FocusInputContainer = lipgloss.NewStyle().
 				Border(BorderStyle).
 				BorderForeground(FocusColor).Padding(0, 1)
