@@ -23,6 +23,7 @@ type State struct {
 	body         textarea.Model
 	header       textarea.Model
 	pipe         textinput.Model
+	saveInput    textinput.Model
 	pipedresp    textarea.Model
 	spinner      spinner.Model
 	resFilter    ResponseFilter
@@ -50,6 +51,7 @@ func InitialModel() State {
 		header:       ui.HeaderTextarea(),
 		url:          ui.UrlInput(REQUEST_METHOD_GET, ""),
 		pipe:         ui.PipeInput(),
+		saveInput:    ui.SaveInput(),
 		response:     ui.ResponseTextarea(),
 		pipedresp:    ui.PipedResponseTextarea(),
 		spinner:      ui.Spinner(),

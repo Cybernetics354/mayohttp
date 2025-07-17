@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Cybernetics354/mayohttp/app/ui"
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -33,13 +34,25 @@ func (m *State) Render() string {
 	var str string
 	switch m.state {
 	case STATE_COMMAND_PALLETE:
-		str = m.RenderWithListHelp(m.RenderCommandPallete())
+		str = m.RenderWithListHelp(listMapping, m.RenderCommandPallete())
 	case STATE_METHOD_PALLETE:
 		str = lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View())
 	case STATE_SELECT_ENV:
-		str = m.RenderWithListHelp(m.RenderEnvList())
-	case STATE_SELECT_SESSION, STATE_SAVE_SESSION, STATE_SAVE_SESSION_INPUT:
-		str = m.RenderWithListHelp(m.RenderSessionList())
+		str = m.RenderWithListHelp(listMapping, m.RenderEnvList())
+	case STATE_SAVE_SESSION_INPUT, STATE_SESSION_RENAME_INPUT:
+		str = m.saveInput.View()
+	case STATE_SELECT_SESSION, STATE_SAVE_SESSION:
+		var mapping help.KeyMap
+		mapping = listMapping
+
+		switch m.state {
+		case STATE_SELECT_SESSION:
+			mapping = sessionListMapping
+		case STATE_SAVE_SESSION:
+			mapping = saveListMapping
+		}
+
+		str = m.RenderWithListHelp(mapping, m.RenderSessionList())
 	default:
 		str = lipgloss.JoinVertical(
 			lipgloss.Top,
@@ -184,8 +197,8 @@ func (m *State) RenderHelp() string {
 	return m.help.View(m.keys)
 }
 
-func (m *State) RenderWithListHelp(body string) string {
-	return lipgloss.JoinVertical(lipgloss.Left, body, m.help.View(listMapping))
+func (m *State) RenderWithListHelp(mapping help.KeyMap, body string) string {
+	return lipgloss.JoinVertical(lipgloss.Left, body, m.help.View(mapping))
 }
 
 func (m *State) RenderURL() string {

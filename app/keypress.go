@@ -1,9 +1,11 @@
 package app
 
 import (
+	"errors"
 	"slices"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -22,6 +24,16 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, sendMsg(nextSectionMsg{})
 		case key.Matches(msg, homeMapping.Back):
 			return m, sendMsg(prevSectionMsg{})
+		case key.Matches(msg, homeMapping.Save):
+			return m, tea.Sequence(
+				sendMsg(addStackMsg{state: STATE_SAVE_SESSION}),
+				sendMsg(loadSessionListMsg{}),
+			)
+		case key.Matches(msg, homeMapping.OpenSession):
+			return m, tea.Sequence(
+				sendMsg(addStackMsg{state: STATE_SELECT_SESSION}),
+				sendMsg(loadSessionListMsg{}),
+			)
 		}
 	}
 
@@ -42,6 +54,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, sendMsg(selectSessionItemMsg{})
 		case STATE_SELECT_ENV:
 			return m, sendMsg(selectEnvMsg{})
+		case STATE_SAVE_SESSION_INPUT, STATE_SESSION_RENAME_INPUT:
+			return m, sendMsg(saveInputSubmitMsg{})
 		}
 	}
 
@@ -62,8 +76,33 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.resFilter, cmd = m.resFilter.HandleKeyPress(msg)
 	case STATE_SELECT_ENV:
 		m.envList, cmd = m.envList.Update(msg)
-	case STATE_SELECT_SESSION, STATE_SAVE_SESSION:
+	case STATE_SESSION_RENAME_INPUT, STATE_SAVE_SESSION_INPUT:
+		m.saveInput, cmd = m.saveInput.Update(msg)
+	case STATE_SAVE_SESSION:
 		m.sessionList, cmd = m.sessionList.Update(msg)
+		if m.sessionList.FilterState() != list.Filtering {
+			switch {
+			case key.Matches(msg, saveListMapping.New):
+				m.saveInput.SetValue("")
+				return m, sendMsg(addStackMsg{state: STATE_SAVE_SESSION_INPUT})
+			}
+		}
+	case STATE_SELECT_SESSION:
+		m.sessionList, cmd = m.sessionList.Update(msg)
+		if m.sessionList.FilterState() != list.Filtering {
+			switch {
+			case key.Matches(msg, sessionListMapping.Rename):
+				i, ok := m.sessionList.SelectedItem().(SessionItem)
+				if !ok {
+					return m, sendMsg(errMsg(errors.New("no session selected")))
+				}
+				m.saveInput.SetValue(i.Title())
+
+				return m, sendMsg(addStackMsg{state: STATE_SESSION_RENAME_INPUT})
+			case key.Matches(msg, sessionListMapping.Delete):
+				return m, sendMsg(deleteSessionItemMsg{})
+			}
+		}
 	}
 
 	return m, cmd

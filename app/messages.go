@@ -67,7 +67,11 @@ type setStateMsg struct {
 	state string
 }
 
+type saveInputSubmitMsg struct{}
+
 type selectSessionItemMsg struct{}
+
+type deleteSessionItemMsg struct{}
 
 type selectCommandPalleteMsg struct{}
 

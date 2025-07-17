@@ -253,6 +253,8 @@ func (m *State) GetField(state string) any {
 		return &m.commands
 	case STATE_FOCUS_RESPONSE_FILTER:
 		return &m.resFilter
+	case STATE_SAVE_SESSION_INPUT, STATE_SESSION_RENAME_INPUT:
+		return &m.saveInput
 	}
 
 	return &m.url
@@ -315,22 +317,23 @@ func (m *State) PrevSection() (tea.Model, tea.Cmd) {
 }
 
 func (m *State) Quit() (tea.Model, tea.Cmd) {
-	if m.commands.FilterState() != list.Unfiltered {
+	if m.state == STATE_COMMAND_PALLETE && m.commands.FilterState() != list.Unfiltered {
 		m.commands.ResetFilter()
 		return m, nil
 	}
 
-	if m.envList.FilterState() != list.Unfiltered {
+	if m.state == STATE_SELECT_ENV && m.envList.FilterState() != list.Unfiltered {
 		m.envList.ResetFilter()
 		return m, nil
 	}
 
-	if m.methodSelect.FilterState() != list.Unfiltered {
+	if m.state == STATE_METHOD_PALLETE && m.methodSelect.FilterState() != list.Unfiltered {
 		m.methodSelect.ResetFilter()
 		return m, nil
 	}
 
-	if m.sessionList.FilterState() != list.Unfiltered {
+	if slices.Contains([]string{STATE_SELECT_SESSION, STATE_SAVE_SESSION}, m.state) &&
+		m.sessionList.FilterState() != list.Unfiltered {
 		m.sessionList.ResetFilter()
 		return m, nil
 	}
@@ -386,8 +389,8 @@ func (m *State) RefreshState() (tea.Model, tea.Cmd) {
 	m.pipedresp.Blur()
 	m.body.Blur()
 	m.header.Blur()
-	m.commands.ResetFilter()
 	m.resFilter.Blur()
+	m.saveInput.Blur()
 
 	switch f := m.GetFocusedField().(type) {
 	case *textarea.Model:
@@ -525,14 +528,14 @@ func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 	case COMMAND_OPEN_HEADER:
 		return m, sendMsg(openRequestHeaderMsg{})
 	case COMMAND_SAVE_SESSION:
-		return m, tea.Batch(
-			sendMsg(loadSessionListMsg{}),
+		return m, tea.Sequence(
 			sendMsg(addStackMsg{state: STATE_SAVE_SESSION}),
+			sendMsg(loadSessionListMsg{}),
 		)
 	case COMMAND_OPEN_SESSION_LIST:
-		return m, tea.Batch(
-			sendMsg(loadSessionListMsg{}),
+		return m, tea.Sequence(
 			sendMsg(addStackMsg{state: STATE_SELECT_SESSION}),
+			sendMsg(loadSessionListMsg{}),
 		)
 	case COMMAND_CHANGE_ENV:
 		return m, tea.Batch(
@@ -636,9 +639,17 @@ func (m *State) LoadSessionList() (tea.Model, tea.Cmd) {
 		sessionItems = append(sessionItems, SessionItem{name: file.Name(), session: session})
 	}
 
-	m.sessionList.ResetFilter()
 	m.sessionList.SetItems(sessionItems)
-	m.sessionList.KeyMap.Quit.SetEnabled(false)
+	if m.sessionList.FilterState() == list.FilterApplied {
+		m.sessionList.SetFilterText(m.sessionList.FilterValue())
+	}
+
+	switch m.state {
+	case STATE_SAVE_SESSION:
+		m.sessionList.Title = "Save Session To"
+	case STATE_SELECT_SESSION:
+		m.sessionList.Title = "Open Session"
+	}
 
 	return m, nil
 }
@@ -685,10 +696,20 @@ func (m *State) RefreshSelectEnv() (tea.Model, tea.Cmd) {
 		fileItems = append(fileItems, fileItem{name: file.Name(), path: file.Name()})
 	}
 
-	m.envList.ResetFilter()
 	m.envList.SetItems(fileItems)
 	m.envList.KeyMap.Quit.SetEnabled(false)
 	return m, nil
+}
+
+func (m *State) DeleteSessionItem() (tea.Model, tea.Cmd) {
+	i, ok := m.sessionList.SelectedItem().(SessionItem)
+	if !ok {
+		return m, sendMsg(errMsg(errors.New("no session selected")))
+	}
+
+	i.Delete()
+
+	return m, sendMsg(loadSessionListMsg{})
 }
 
 func (m *State) SelectSessionItem() (tea.Model, tea.Cmd) {
@@ -712,6 +733,38 @@ func (m *State) SelectSessionItem() (tea.Model, tea.Cmd) {
 		return m, tea.Batch(
 			sendMsg(replaceCurrentSessionMsg{path: i.Path()}),
 			sendMsg(popStackRootMsg{}),
+		)
+	}
+
+	return m, nil
+}
+
+func (m *State) SaveSessionInputSubmit() (tea.Model, tea.Cmd) {
+	val := strings.TrimSpace(m.saveInput.Value())
+	if val == "" {
+		return m, sendMsg(errMsg(errors.New("new name is empty")))
+	}
+
+	switch m.state {
+	case STATE_SAVE_SESSION_INPUT:
+		return m, tea.Batch(
+			sendMsg(saveSessionMsg{path: fmt.Sprintf("%s/%s.json", collectionFolder, val)}),
+			sendMsg(popStackRootMsg{}),
+		)
+	case STATE_SESSION_RENAME_INPUT:
+		i, ok := m.sessionList.SelectedItem().(SessionItem)
+		if !ok {
+			return m, sendMsg(errMsg(errors.New("no session selected")))
+		}
+
+		err := i.Rename(val)
+		if err != nil {
+			return m, sendMsg(errMsg(err))
+		}
+
+		return m, tea.Batch(
+			sendMsg(popStackMsg{}),
+			sendMsg(loadSessionListMsg{}),
 		)
 	}
 

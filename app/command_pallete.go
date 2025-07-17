@@ -15,7 +15,7 @@ func (c commandPallete) Description() string {
 }
 
 func (c commandPallete) FilterValue() string {
-	return c.title
+	return c.title + " " + c.desc
 }
 
 var commandPalletes = []list.Item{

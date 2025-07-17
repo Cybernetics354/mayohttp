@@ -1,6 +1,9 @@
 package app
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type SessionItem struct {
 	name    string
@@ -30,6 +33,26 @@ func (s *SessionItem) GetSession() error {
 	}
 
 	s.session = session
+
+	return nil
+}
+
+func (s *SessionItem) Delete() error {
+	err := os.Remove(s.Path())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SessionItem) Rename(name string) error {
+	err := os.Rename(s.Path(), fmt.Sprintf("%s/%s.json", collectionFolder, name))
+	if err != nil {
+		return err
+	}
+
+	s.name = name
 
 	return nil
 }

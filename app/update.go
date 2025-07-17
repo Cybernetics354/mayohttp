@@ -76,6 +76,10 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.SelectEnv()
 	case selectSessionItemMsg:
 		return m.SelectSessionItem()
+	case deleteSessionItemMsg:
+		return m.DeleteSessionItem()
+	case saveInputSubmitMsg:
+		return m.SaveSessionInputSubmit()
 	case refreshSelectEnvMsg:
 		return m.RefreshSelectEnv()
 	case setActivityMsg:
