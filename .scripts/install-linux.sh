@@ -3,8 +3,8 @@ set -euo pipefail
 
 REPO="Cybernetics354/mayohttp"
 DEFAULT_INSTALL_DIR="$HOME/.local/bin"
-INSTALL_DIR="$DEFAULT_INSTALL_DIR"
-VERSION=""
+INSTALL_DIR=${DESTINATION:-$DEFAULT_INSTALL_DIR}
+VERSION=${VERSION:-}
 TMP_DIR=$(mktemp -d)
 
 # --- Pre-checks ---
