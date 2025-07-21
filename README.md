@@ -28,10 +28,10 @@ $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/ma
 ```
 
 ### ⚙️ Installation parameters
-| Variable      | Parameter       | Example                                                  | Remarks                                               |
-|---------------|-----------------|----------------------------------------------------------|-------------------------------------------------------|
-| `VERSION`     | `--version`     | `VERSION=v0.0.2` or `--version v0.0.2`                   | Install specific version (default: latest release)    |
-| `DESTINATION` | `--destination` | `DESTINATION=/usr/bin` or `--destination /usr/local/bin` | Install to custom directory (default: `~/.local/bin`) |
+| Variable      | Parameter       | Example                                                     | Remarks                                               |
+|---------------|-----------------|-------------------------------------------------------------|-------------------------------------------------------|
+| `VERSION`     | `--version`     | `VERSION=v0.0.2` or<br>`--version v0.0.2`                   | Install specific version (default: latest release)    |
+| `DESTINATION` | `--destination` | `DESTINATION=/usr/bin` or<br>`--destination /usr/local/bin` | Install to custom directory (default: `~/.local/bin`) |
 
 Example:
 ```bash
