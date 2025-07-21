@@ -28,14 +28,14 @@ $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/ma
 ```
 
 ### ⚙️ Installation parameters
-| Parameter       | Example                        | Remarks                                               |
-|-----------------|--------------------------------|-------------------------------------------------------|
-| `--version`     | `--version v0.0.2`             | Install specific version (default: latest release)    |
-| `--destination` | `--destination /usr/local/bin` | Install to custom directory (default: `~/.local/bin`) |
+| Variable      | Parameter       | Example                                                  | Remarks                                               |
+|---------------|-----------------|----------------------------------------------------------|-------------------------------------------------------|
+| `VERSION`     | `--version`     | `VERSION=v0.0.2` or `--version v0.0.2`                   | Install specific version (default: latest release)    |
+| `DESTINATION` | `--destination` | `DESTINATION=/usr/bin` or `--destination /usr/local/bin` | Install to custom directory (default: `~/.local/bin`) |
 
 Example:
 ```bash
-$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/mayohttp/main/.scripts/install-linux.sh)" --version v0.0.2 --destination /usr/local/bin
+$ VERSION=v0.0.2 DESTINATION=/usr/bin /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/mayohttp/main/.scripts/install-linux.sh)"
 ```
 
 ## ✋ Manual Install (Alternative)
