@@ -24,7 +24,7 @@ A TUI HTTP client written in Go with Pipelines on mind.
 > ✅ Supported OS: Linux and MacOS
 
 ```bash
-$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/mayohttp/main/.scripts/install-linux.sh)"
+$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/mayohttp/main/.scripts/install.sh)"
 ```
 
 ### ⚙️ Installation parameters
@@ -35,7 +35,7 @@ $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/ma
 
 Example:
 ```bash
-$ VERSION=v0.0.2 DESTINATION=/usr/bin /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/mayohttp/main/.scripts/install-linux.sh)"
+$ VERSION=v0.0.2 DESTINATION=/usr/bin /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Cybernetics354/mayohttp/main/.scripts/install.sh)"
 ```
 
 ## ✋ Manual Install (Alternative)
