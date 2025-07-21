@@ -13,6 +13,12 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
     flags: ["-trimpath"]
     targets: ["go_first_class"]
+    goos: 
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
 
 changelog:
   sort: asc
