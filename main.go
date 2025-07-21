@@ -17,13 +17,12 @@ func main() {
 		app.EnvFilePath = *envPtr
 	}
 
-	d, e, err := app.SetupLogger()
+	e, err := app.SetupLogger()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	defer d.Close()
 	defer e.Close()
 
 	p := tea.NewProgram(app.InitialModel())

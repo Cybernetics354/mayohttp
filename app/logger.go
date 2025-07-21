@@ -34,24 +34,15 @@ func (l *Logger) Close() {
 	l.file.Close()
 }
 
-func SetupLogger() (*Logger, *Logger, error) {
-	debugLogger, err := newLogger(debugLogPath)
-	if err != nil {
-		return nil, nil, err
-	}
-
+func SetupLogger() (*Logger, error) {
 	errLogger, err := newLogger(errorDebugLogPath)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	debugLog = debugLogger
 	errLog = errLogger
 
-	return debugLogger, errLogger, nil
+	return errLogger, nil
 }
 
-var (
-	debugLog *Logger
-	errLog   *Logger
-)
+var errLog *Logger

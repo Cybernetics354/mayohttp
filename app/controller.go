@@ -577,15 +577,16 @@ func (m *State) CheckOrCreateEnvFile() (tea.Model, tea.Cmd) {
 }
 
 func (m *State) ReplaceCurrentSession(msg replaceCurrentSessionMsg) (tea.Model, tea.Cmd) {
-	_, err := openSessionFromPath(msg.path)
+	path := msg.path
+	_, err := openSessionFromPath(path)
 	if err != nil {
 		return m, tea.Batch(
 			sendMsg(errMsg(err)),
-			sendMsg(setActivityMsg("Can't load session on "+msg.path)),
+			sendMsg(setActivityMsg("Can't load session on "+path)),
 		)
 	}
 
-	return m, sendMsg(loadSessionMsg{path: msg.path})
+	return m, sendMsg(loadSessionMsg{path: path})
 }
 
 func (m *State) SaveSession(msg saveSessionMsg) (tea.Model, tea.Cmd) {
@@ -707,7 +708,10 @@ func (m *State) DeleteSessionItem() (tea.Model, tea.Cmd) {
 		return m, sendMsg(errMsg(errors.New("no session selected")))
 	}
 
-	i.Delete()
+	err := i.Delete()
+	if err != nil {
+		return m, sendMsg(errMsg(err))
+	}
 
 	return m, sendMsg(loadSessionListMsg{})
 }

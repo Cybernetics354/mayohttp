@@ -57,7 +57,11 @@ func (r *requestBody) FormBuffer() (*bytes.Buffer, error) {
 		keyValLine := strings.SplitN(trimmed, "=", 2)
 		if len(keyValLine) == 2 {
 			key, val := keyValLine[0], keyValLine[1]
-			form.WriteField(key, val)
+			err := form.WriteField(key, val)
+			if err != nil {
+				return nil, err
+			}
+
 			continue
 		}
 

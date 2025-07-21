@@ -32,7 +32,6 @@ type State struct {
 	keys         homeKeymap
 	activity     string
 	envList      list.Model
-	err          error
 	sw           int
 	sh           int
 }

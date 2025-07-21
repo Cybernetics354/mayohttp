@@ -4,3 +4,5 @@ run:
 	go run .
 watch:
 	gow run .
+lint:
+	golangci-lint run
