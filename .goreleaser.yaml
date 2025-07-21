@@ -48,3 +48,18 @@ release:
     ---
 
     _Released with [GoReleaser](https://goreleaser.com)!_
+
+brews:
+  -
+    # Repository to push the tap to.
+    repository:
+      owner: Cybernetics354
+      name: homebrew-mayohttp
+
+    # Your app's homepage.
+    # Default is empty.
+    homepage: 'https://github.com/Cybernetics354/mayohttp/'
+
+    # Your app's description.
+    # Default is empty.
+    description: 'A simple TUI HTTP Client, written in Go'
