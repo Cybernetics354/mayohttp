@@ -3,6 +3,7 @@ package app
 import (
 	"log/slog"
 	"os"
+	"path/filepath"
 )
 
 type Logger struct {
@@ -11,6 +12,14 @@ type Logger struct {
 }
 
 func newLogger(path string) (*Logger, error) {
+	fileDir := filepath.Dir(path)
+	if _, err := os.Stat(fileDir); os.IsNotExist(err) {
+		err = os.MkdirAll(fileDir, 0o755)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return nil, err
