@@ -3,12 +3,16 @@
 A TUI HTTP client written in Go with Pipelines on mind.
 
 ![preview](./readme/preview.png "TUI Preview")
-
 ![piping](./readme/pipe_preview.png "Piping Preview")
-
 ![command pallete](./readme/command_pallete.png "Command Pallete")
-
 ![select method](./readme/select_method.png "Select Method")
+
+## Table of Contents
+- [Main features](#main-features)
+- [Installation](#-automatic-install-recommended)
+    - [🚀 Automatic Install (Recommended)](#-automatic-install-recommended)
+    - [✋ Manual Install (Alternative)](#-manual-install-alternative)
+- [Neovim Plugin](#neovim-plugin)
 
 ## Main features
 
@@ -87,3 +91,7 @@ $ export PATH="$HOME/.local/bin:$PATH"
 ```bash
 $ source ~/.profile
 ```
+
+## Neovim Plugin
+
+If you use [Neovim](https://neovim.io/), you can install the [mayohttp.nvim](https://github.com/Cybernetics354/mayohttp.nvim) plugin.
