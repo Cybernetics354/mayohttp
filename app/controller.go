@@ -613,7 +613,10 @@ func (m *State) LoadSession(msg loadSessionMsg) (tea.Model, tea.Cmd) {
 
 	session.Apply(m)
 
-	return m, sendMsg(setActivityMsg("Session loaded from " + msg.path))
+	return m, tea.Batch(
+		sendMsg(setActivityMsg("Session loaded from "+msg.path)),
+		sendMsg(recalculateComponentSizesMsg{}),
+	)
 }
 
 func (m *State) LoadSessionList() (tea.Model, tea.Cmd) {
