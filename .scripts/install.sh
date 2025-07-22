@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
 REPO="Cybernetics354/mayohttp"
 DEFAULT_INSTALL_DIR="$HOME/.local/bin"
@@ -41,7 +41,7 @@ else
 fi
 
 # --- Parse arguments ---
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
   case "$1" in
     --destination)
       INSTALL_DIR="$2"
@@ -60,14 +60,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 # --- Detect version ---
-if [[ -z "$VERSION" ]]; then
+if [ -z "$VERSION" ]; then
   echo "🔍 Fetching latest version from GitHub..."
   if command -v curl >/dev/null 2>&1; then
-    VERSION=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | grep -oP '"tag_name": "\K(.*)(?=")')
+    VERSION=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | awk -F'"tag_name"[[:space:]]*:[[:space:]]*"' 'NF>1 { split($2, a, "\""); print a[1] }')
   else
-    VERSION=$(wget -qO- "https://api.github.com/repos/${REPO}/releases/latest" | grep -oP '"tag_name": "\K(.*)(?=")')
+    VERSION=$(wget -qO- "https://api.github.com/repos/${REPO}/releases/latest" | awk -F'"tag_name"[[:space:]]*:[[:space:]]*"' 'NF>1 { split($2, a, "\""); print a[1] }')
   fi
-  if [[ -z "$VERSION" ]]; then
+  if [ -z "$VERSION" ]; then
     echo "❌ Failed to fetch latest version"
     exit 1
   fi
@@ -108,7 +108,7 @@ ASSET="mayohttp_${VERSION#v}_${OS}_${ARCH}.tar.gz"
 ORIGIN_PWD=$(pwd)
 cd "$TMP_DIR"
 
-function cleanup() {
+cleanup() {
   echo "🧹 Cleaning up..."
   rm -rf "$TMP_DIR"
   cd "$ORIGIN_PWD"
@@ -126,7 +126,7 @@ grep " ${ASSET}$" "$CHECKSUM_FILE" | $SHACMD -c -
 echo "📦 Extracting archive..."
 tar -xzf "${ASSET}"
 
-if [[ ! -f mayohttp ]]; then
+if [ ! -f mayohttp ]; then
   echo "❌ Expected file 'mayohttp' not found after extracting"
   cleanup
   exit 1
@@ -141,12 +141,15 @@ mv mayohttp "$INSTALL_DIR/mayohttp"
 #if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
 if ! command -v mayohttp >/dev/null 2>&1; then
     echo
-    echo "    ⚠️  $INSTALL_DIR is not in your PATH."
-    echo "    👉 To fix, add this line to your shell profile (~/.bashrc, ~/.zshrc, or ~/.profile):"
+    echo " *-----------------------------------------------------------------------------------------"
+    echo " |  ⚠️  $INSTALL_DIR is not in your PATH."
+    echo " |  👉 To fix, add this line to your shell profile (~/.bashrc, ~/.zshrc, or ~/.profile):"
+    echo " |"
+    echo " |      export PATH=\"$INSTALL_DIR:\$PATH\""
+    echo " |"
+    echo " |  Then run: source ~/.profile (or your shell config)"
+    echo " *-----------------------------------------------------------------------------------------"
     echo
-    echo "        export PATH=\"$INSTALL_DIR:\$PATH\""
-    echo
-    echo "    Then run: source ~/.profile (or your shell config)"
 fi
 
 cleanup
