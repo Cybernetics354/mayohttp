@@ -16,8 +16,7 @@ var (
 	tempFilePath       = fmt.Sprintf("%s/temp", configFolder)
 	defaultSessionPath = fmt.Sprintf("%s/session.json", configFolder)
 	// debugLogPath       = fmt.Sprintf("%s/debug.log", configFolder)
-	// errorDebugLogPath  = fmt.Sprintf("%s/error.log", configFolder)
-	errorDebugLogPath = "error.log"
+	errorDebugLogPath = fmt.Sprintf("%s/error.log", configFolder)
 	homeLayout        = []string{
 		STATE_FOCUS_URL,
 		STATE_FOCUS_PIPE,
