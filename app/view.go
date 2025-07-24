@@ -2,6 +2,8 @@ package app
 
 import (
 	"fmt"
+	"math"
+	"slices"
 
 	"github.com/Cybernetics354/mayohttp/app/ui"
 	"github.com/charmbracelet/bubbles/help"
@@ -31,16 +33,44 @@ func (m *State) RefreshView() {
 }
 
 func (m *State) Render() string {
-	var str string
-	switch m.state {
+	base := m.RenderBase()
+	overlay := m.GetOverlayLayers()
+	view := ui.NewCompositeView(base)
+
+	for _, layer := range overlay {
+		view.AddLayer(layer)
+	}
+
+	return appStyle.Render(view.Render())
+}
+
+func (m *State) RenderBase() string {
+	state := m.state
+
+	if slices.Contains(overlays, state) {
+		length := len(m.stateStack)
+		for i := range m.stateStack {
+			index := (length - 1) - i
+			cState := m.stateStack[index]
+
+			if slices.Contains(overlays, cState) {
+				continue
+			}
+
+			state = cState
+			break
+		}
+	}
+
+	switch state {
 	case STATE_COMMAND_PALLETE:
-		str = m.RenderWithListHelp(listMapping, m.RenderCommandPallete())
+		return m.RenderWithListHelp(listMapping, m.RenderCommandPallete())
 	case STATE_METHOD_PALLETE:
-		str = lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View())
+		return lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View())
 	case STATE_SELECT_ENV:
-		str = m.RenderWithListHelp(listMapping, m.RenderEnvList())
+		return m.RenderWithListHelp(listMapping, m.RenderEnvList())
 	case STATE_SAVE_SESSION_INPUT, STATE_SESSION_RENAME_INPUT:
-		str = m.saveInput.View()
+		return m.saveInput.View()
 	case STATE_SELECT_SESSION, STATE_SAVE_SESSION:
 		var mapping help.KeyMap
 		mapping = listMapping
@@ -52,9 +82,9 @@ func (m *State) Render() string {
 			mapping = saveListMapping
 		}
 
-		str = m.RenderWithListHelp(mapping, m.RenderSessionList())
+		return m.RenderWithListHelp(mapping, m.RenderSessionList())
 	default:
-		str = lipgloss.JoinVertical(
+		return lipgloss.JoinVertical(
 			lipgloss.Top,
 			m.RenderURL(),
 			m.RenderPipe(),
@@ -73,8 +103,63 @@ func (m *State) Render() string {
 			),
 		)
 	}
+}
 
-	return appStyle.Render(str)
+func (m *State) GetOverlayLayers() []*ui.CompositeViewLayer {
+	var layers []*ui.CompositeViewLayer
+
+	for _, state := range m.stateStack {
+		if !slices.Contains(overlays, state) {
+			continue
+		}
+
+		layer := ui.NewCompositeViewLayer()
+		switch state {
+		case STATE_KEYBINDING_MODAL:
+			layer.SetView(m.RenderKeybindings())
+		}
+
+		layers = append(layers, layer)
+	}
+
+	return layers
+}
+
+func (m *State) RenderKeybindings() string {
+	title := lipgloss.NewStyle().Foreground(ui.FocusColor).Padding(0, 1).Render("Keybinding")
+	base := lipgloss.NewStyle().
+		MaxWidth(int(math.Max(60, float64(m.sw/2)))).
+		PaddingRight(2).
+		MaxHeight(m.sh - (m.sh/12)*2).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(ui.FocusColor)
+
+	var tiles []string
+	keyStyle := lipgloss.NewStyle().
+		Width(12).
+		Foreground(ui.FocusColor).
+		Align(lipgloss.Right).
+		PaddingRight(1)
+
+	tiles = append(
+		tiles,
+		lipgloss.JoinHorizontal(lipgloss.Left, keyStyle.Render(""), "-- Local --"),
+	)
+	for _, key := range homeMapping.KeybindingHelp() {
+		key, desc := key.Help().Key, key.Help().Desc
+
+		tile := lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			keyStyle.Render(key),
+			desc,
+		)
+
+		tiles = append(tiles, tile)
+	}
+
+	content := lipgloss.JoinVertical(lipgloss.Top, tiles...)
+
+	return ui.RenderWithHeader(base.Render(content), title)
 }
 
 func (m *State) PreviewSize() (int, int) {
