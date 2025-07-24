@@ -23,5 +23,8 @@ var (
 		STATE_FOCUS_RESPONSE_FILTER,
 		STATE_FOCUS_PIPEDRESP,
 	}
+	overlays = []string{
+		STATE_KEYBINDING_MODAL,
+	}
 	responseSeparator = strings.Repeat("=", 50)
 )

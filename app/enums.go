@@ -15,6 +15,7 @@ const (
 	STATE_SAVE_SESSION          = "state_save_session"
 	STATE_SAVE_SESSION_INPUT    = "state_save_session_input"
 	STATE_SESSION_RENAME_INPUT  = "state_session_rename_input"
+	STATE_KEYBINDING_MODAL      = "state_keybinding_modal"
 
 	COMMAND_OPEN_ENV          = "command_open_env"
 	COMMAND_CHANGE_ENV        = "command_change_env"
