@@ -3,17 +3,42 @@ package app
 import "github.com/charmbracelet/bubbles/key"
 
 type homeKeymap struct {
-	Open, Method, Commands, Quit, Next, Back, Run, Save, SaveAs, OpenSession key.Binding
+	Open,
+	Method,
+	Commands,
+	Quit,
+	Next,
+	Back,
+	Run,
+	Save,
+	SaveAs,
+	OpenSession,
+	Keybinding key.Binding
 }
 
 func (k homeKeymap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Open, k.Method, k.Save, k.OpenSession, k.Commands, k.Quit}
+	return []key.Binding{k.Run, k.Keybinding}
 }
 
 func (k homeKeymap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Commands},
 		{k.Quit},
+	}
+}
+
+func (k *homeKeymap) KeybindingHelp() []key.Binding {
+	return []key.Binding{
+		k.Run,
+		k.Method,
+		k.Open,
+		k.Next,
+		k.Back,
+		k.Commands,
+		k.Save,
+		k.OpenSession,
+		k.Quit,
+		k.Keybinding,
 	}
 }
 
@@ -24,35 +49,39 @@ var homeMapping = homeKeymap{
 	),
 	Method: key.NewBinding(
 		key.WithKeys("ctrl+j"),
-		key.WithHelp("ctrl+j", "Select Method"),
+		key.WithHelp("<c-j>", "Select Request Method (GET, POST, PUT, DELETE, OPTIONS, PATCH)"),
 	),
 	Open: key.NewBinding(
 		key.WithKeys("ctrl+o"),
-		key.WithHelp("ctrl+o", "Open on editor"),
+		key.WithHelp("<c-o>", "Open the current active field on default editor ($EDITOR)"),
 	),
 	Next: key.NewBinding(
 		key.WithKeys("tab"),
-		key.WithHelp("tab", "Next"),
+		key.WithHelp("tab", "Move to next section"),
 	),
 	Back: key.NewBinding(
 		key.WithKeys("shift+tab"),
-		key.WithHelp("shift+tab", "Back"),
+		key.WithHelp("shift+tab", "Move to previous section"),
 	),
 	Commands: key.NewBinding(
 		key.WithKeys("ctrl+p"),
-		key.WithHelp("ctrl+p", "Commands"),
+		key.WithHelp("<c-p>", "Open Command List"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("esc", "ctrl+c"),
-		key.WithHelp("esc", "Quit"),
+		key.WithHelp("esc", "Quit the MayoHTTP"),
 	),
 	Save: key.NewBinding(
 		key.WithKeys("ctrl+s"),
-		key.WithHelp("ctrl+s", "Save"),
+		key.WithHelp("<c-s>", "Save current Session"),
 	),
 	OpenSession: key.NewBinding(
 		key.WithKeys("ctrl+l"),
-		key.WithHelp("ctrl+l", "Open Session"),
+		key.WithHelp("<c-l>", "Open/Load another Session"),
+	),
+	Keybinding: key.NewBinding(
+		key.WithKeys("ctrl+h"),
+		key.WithHelp("<c-h>", "Keybindings"),
 	),
 }
 
@@ -153,7 +182,7 @@ var sessionListMapping = sessionListKeymap{
 	),
 	Delete: key.NewBinding(
 		key.WithKeys("D"),
-		key.WithHelp("shift+d", "Delete (without confirmation)"),
+		key.WithHelp("D", "Delete (without confirmation)"),
 	),
 	Rename: key.NewBinding(
 		key.WithKeys("r"),
