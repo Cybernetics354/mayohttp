@@ -91,6 +91,7 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			switch {
 			case key.Matches(msg, saveListMapping.New):
 				m.saveInput.SetValue("")
+				m.saveInput.Prompt = "New Session Name"
 				return m, sendMsg(addStackMsg{state: STATE_SAVE_SESSION_INPUT})
 			}
 		}
@@ -103,6 +104,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				if !ok {
 					return m, sendMsg(errMsg(errors.New("no session selected")))
 				}
+
+				m.saveInput.Prompt = "Rename Session"
 				m.saveInput.SetValue(i.Title())
 
 				return m, sendMsg(addStackMsg{state: STATE_SESSION_RENAME_INPUT})

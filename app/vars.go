@@ -25,6 +25,8 @@ var (
 	}
 	overlays = []string{
 		STATE_KEYBINDING_MODAL,
+		STATE_SAVE_SESSION_INPUT,
+		STATE_SESSION_RENAME_INPUT,
 	}
 	responseSeparator = strings.Repeat("=", 50)
 )

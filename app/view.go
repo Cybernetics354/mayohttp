@@ -69,8 +69,6 @@ func (m *State) RenderBase() string {
 		return lipgloss.JoinVertical(lipgloss.Top, m.methodSelect.View())
 	case STATE_SELECT_ENV:
 		return m.RenderWithListHelp(listMapping, m.RenderEnvList())
-	case STATE_SAVE_SESSION_INPUT, STATE_SESSION_RENAME_INPUT:
-		return m.saveInput.View()
 	case STATE_SELECT_SESSION, STATE_SAVE_SESSION:
 		var mapping help.KeyMap
 		mapping = listMapping
@@ -117,12 +115,27 @@ func (m *State) GetOverlayLayers() []*ui.CompositeViewLayer {
 		switch state {
 		case STATE_KEYBINDING_MODAL:
 			layer.SetView(m.RenderKeybindings())
+		case STATE_SAVE_SESSION_INPUT, STATE_SESSION_RENAME_INPUT:
+			layer.SetView(m.RenderSessionInput())
 		}
 
 		layers = append(layers, layer)
 	}
 
 	return layers
+}
+
+func (m *State) RenderSessionInput() string {
+	title := lipgloss.NewStyle().Foreground(ui.FocusColor).Padding(0, 1).Render(m.saveInput.Prompt)
+	m.saveInput.Prompt = ""
+
+	base := lipgloss.NewStyle().
+		Width(int(math.Max(60, float64(m.sw/2)))).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(ui.FocusColor).
+		Render(m.saveInput.View())
+
+	return ui.RenderWithHeader(base, title)
 }
 
 func (m *State) RenderKeybindings() string {
