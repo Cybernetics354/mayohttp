@@ -14,6 +14,7 @@ type homeKeymap struct {
 	SaveAs,
 	OpenSession,
 	CopyToClipboard,
+	OpenEnv,
 	Keybinding key.Binding
 }
 
@@ -44,6 +45,10 @@ func (k *homeKeymap) KeybindingHelp() []key.Binding {
 }
 
 var homeMapping = homeKeymap{
+	OpenEnv: key.NewBinding(
+		key.WithKeys("ctrl+e"),
+		key.WithHelp("<c-e>", "Open ENV on default editor ($EDITOR)"),
+	),
 	CopyToClipboard: key.NewBinding(
 		key.WithKeys("ctrl+y"),
 		key.WithHelp("<c-y>", "Copy current focused text field to clipboard"),
