@@ -16,6 +16,7 @@ const (
 	STATE_SAVE_SESSION_INPUT    = "state_save_session_input"
 	STATE_SESSION_RENAME_INPUT  = "state_session_rename_input"
 	STATE_KEYBINDING_MODAL      = "state_keybinding_modal"
+	STATE_TELESCOPE             = "state_telescope"
 
 	COMMAND_OPEN_ENV          = "command_open_env"
 	COMMAND_CHANGE_ENV        = "command_change_env"
@@ -24,6 +25,9 @@ const (
 	COMMAND_SELECT_METHOD     = "command_select_method"
 	COMMAND_SAVE_SESSION      = "command_save_session"
 	COMMAND_OPEN_SESSION_LIST = "command_open_session_list"
+
+	TELESCOPE_METHOD_PALLETE = "telescope_method_pallete"
+	TELESCOPE_QUICK_ACCESS   = "telescope_quick_access"
 
 	REQUEST_METHOD_GET     = "GET"
 	REQUEST_METHOD_POST    = "POST"
