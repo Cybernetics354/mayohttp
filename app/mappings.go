@@ -15,6 +15,7 @@ type homeKeymap struct {
 	OpenSession,
 	CopyToClipboard,
 	OpenEnv,
+	QuickAccess,
 	Keybinding key.Binding
 }
 
@@ -32,6 +33,7 @@ func (k homeKeymap) FullHelp() [][]key.Binding {
 func (k *homeKeymap) KeybindingHelp() []key.Binding {
 	return []key.Binding{
 		k.Run,
+		k.QuickAccess,
 		k.CopyToClipboard,
 		k.Method,
 		k.Open,
@@ -47,6 +49,10 @@ func (k *homeKeymap) KeybindingHelp() []key.Binding {
 }
 
 var homeMapping = homeKeymap{
+	QuickAccess: key.NewBinding(
+		key.WithKeys("ctrl+j"),
+		key.WithHelp("<c-j>", "Open quick access menu"),
+	),
 	OpenEnv: key.NewBinding(
 		key.WithKeys("ctrl+e"),
 		key.WithHelp("<c-e>", "Open ENV on default editor ($EDITOR)"),
