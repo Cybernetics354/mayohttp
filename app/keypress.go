@@ -23,6 +23,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	if slices.Contains(homeLayout, m.state) {
 		switch {
+		case key.Matches(msg, homeMapping.QuickAccess):
+			return m, sendMsg(openTelescopeMsg{teleType: TELESCOPE_QUICK_ACCESS})
 		case key.Matches(msg, homeMapping.CopyToClipboard):
 			return m, sendMsg(copyToClipboardMsg{})
 		case key.Matches(msg, homeMapping.OpenEnv):
