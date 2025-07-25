@@ -12,6 +12,15 @@ import (
 func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
+	if m.state == STATE_TELESCOPE {
+		if key.Matches(msg, homeMapping.Quit) {
+			return m, sendMsg(popStackMsg{})
+		}
+
+		m.telescope, cmd = m.telescope.Update(msg)
+		return m, cmd
+	}
+
 	if slices.Contains(homeLayout, m.state) {
 		switch {
 		case key.Matches(msg, homeMapping.CopyToClipboard):
