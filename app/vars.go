@@ -27,6 +27,7 @@ var (
 		STATE_KEYBINDING_MODAL,
 		STATE_SAVE_SESSION_INPUT,
 		STATE_SESSION_RENAME_INPUT,
+		STATE_TELESCOPE,
 	}
 	responseSeparator = strings.Repeat("=", 50)
 )
