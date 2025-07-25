@@ -32,11 +32,13 @@ func (k homeKeymap) FullHelp() [][]key.Binding {
 func (k *homeKeymap) KeybindingHelp() []key.Binding {
 	return []key.Binding{
 		k.Run,
+		k.CopyToClipboard,
 		k.Method,
 		k.Open,
 		k.Next,
 		k.Back,
 		k.Commands,
+		k.OpenEnv,
 		k.Save,
 		k.OpenSession,
 		k.Quit,
