@@ -60,8 +60,8 @@ var homeMapping = homeKeymap{
 		key.WithHelp("enter", "Run"),
 	),
 	Method: key.NewBinding(
-		key.WithKeys("ctrl+j"),
-		key.WithHelp("<c-j>", "Select Request Method (GET, POST, PUT, DELETE, OPTIONS, PATCH)"),
+		key.WithKeys("ctrl+k"),
+		key.WithHelp("<c-k>", "Select Request Method (GET, POST, PUT, DELETE, OPTIONS, PATCH)"),
 	),
 	Open: key.NewBinding(
 		key.WithKeys("ctrl+o"),
