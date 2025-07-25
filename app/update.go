@@ -1,6 +1,9 @@
 package app
 
 import (
+	"errors"
+
+	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -88,6 +91,12 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.SetFieldValue(msg)
 	case copyToClipboardMsg:
 		return m.CopyToClipboard()
+	case openTelescopeMsg:
+		return m.OpenTelescope(msg)
+	case telescope.SubmitMsg:
+		return m.SelectTelescopeItem(msg)
+	case telescope.ErrorMsg:
+		return m, sendMsg(errMsg(errors.New(string(msg))))
 	case errMsg:
 		return m.HandleErrorMsg(msg)
 	}
