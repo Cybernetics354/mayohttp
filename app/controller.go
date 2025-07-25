@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -19,6 +20,54 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+func (m *State) OpenTelescope(msg openTelescopeMsg) (tea.Model, tea.Cmd) {
+	var items []list.Item
+	var title string
+
+	switch msg.teleType {
+	case TELESCOPE_METHOD_PALLETE:
+		items = methodPalletesTelescope
+		title = "Select Method"
+	case TELESCOPE_QUICK_ACCESS:
+		items = quickAccess
+		title = "Quick Access"
+	}
+
+	m.telescope.SetList(items)
+	m.telescope.SetTitle(title)
+	m.telescope.SetTeleType(msg.teleType)
+
+	return m, sendMsg(addStackMsg{state: STATE_TELESCOPE})
+}
+
+func (m *State) SelectTelescopeItem(msg telescope.SubmitMsg) (tea.Model, tea.Cmd) {
+	val := msg.Value.Value()
+	switch msg.TeleType {
+	case TELESCOPE_QUICK_ACCESS:
+		val, ok := val.([]tea.Msg)
+		if !ok {
+			return m, sendMsg(errMsg(errors.New("no menu selected")))
+		}
+
+		var cmds []tea.Cmd
+		for _, msg := range val {
+			cmds = append(cmds, sendMsg(msg))
+		}
+
+		return m, tea.Sequence(sendMsg(popStackMsg{}), tea.Batch(cmds...))
+	case TELESCOPE_METHOD_PALLETE:
+		val, ok := val.(string)
+		if !ok {
+			return m, sendMsg(errMsg(errors.New("no method selected")))
+		}
+		m.method = val
+		m.url.Prompt = val + " | "
+		m.url.Width = m.sw - 5 - len(m.url.Prompt)
+	}
+
+	return m, sendMsg(popStackMsg{})
+}
 
 func (m *State) CopyToClipboard() (tea.Model, tea.Cmd) {
 	var val string
