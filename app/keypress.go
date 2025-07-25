@@ -34,7 +34,7 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, homeMapping.Commands):
 			return m, sendMsg(addStackMsg{state: STATE_COMMAND_PALLETE})
 		case key.Matches(msg, homeMapping.Method):
-			return m, sendMsg(addStackMsg{state: STATE_METHOD_PALLETE})
+			return m, sendMsg(openTelescopeMsg{teleType: TELESCOPE_METHOD_PALLETE})
 		case key.Matches(msg, homeMapping.Next):
 			return m, sendMsg(nextSectionMsg{})
 		case key.Matches(msg, homeMapping.Back):

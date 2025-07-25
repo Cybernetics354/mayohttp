@@ -594,7 +594,7 @@ func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 	case COMMAND_OPEN_ENV:
 		return m, sendMsg(openEnvMsg{})
 	case COMMAND_SELECT_METHOD:
-		return m, sendMsg(addStackMsg{state: STATE_METHOD_PALLETE})
+		return m, sendMsg(openTelescopeMsg{teleType: TELESCOPE_METHOD_PALLETE})
 	case COMMAND_OPEN_BODY:
 		return m, sendMsg(openRequestBodyMsg{})
 	case COMMAND_OPEN_HEADER:
