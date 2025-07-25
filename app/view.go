@@ -30,6 +30,8 @@ func (m *State) RefreshView() {
 	m.envList.SetSize(ui.ListWidth, lh)
 	m.sessionList.SetSize(ui.ListWidth, lh)
 	m.methodSelect.SetSize(w, h)
+
+	m.telescope.SetSize(clamp(w/2, 60, 90), clamp(h/4, 10, 30))
 }
 
 func (m *State) Render() string {
@@ -103,11 +105,25 @@ func (m *State) RenderBase() string {
 	}
 }
 
+func (m *State) RenderTelescopeLayer() *ui.CompositeViewLayer {
+	layer := ui.NewCompositeViewLayer()
+	layer.SetView(m.telescope.View())
+	layer.SetPositionY(ui.CompositeLayerTop)
+	layer.SetOffset(0, m.sh/3)
+
+	return layer
+}
+
 func (m *State) GetOverlayLayers() []*ui.CompositeViewLayer {
 	var layers []*ui.CompositeViewLayer
 
 	for _, state := range m.stateStack {
 		if !slices.Contains(overlays, state) {
+			continue
+		}
+
+		if state == STATE_TELESCOPE {
+			layers = append(layers, m.RenderTelescopeLayer())
 			continue
 		}
 
