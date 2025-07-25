@@ -8,6 +8,10 @@ type errMsg error
 
 type checkEnvFileMsg struct{}
 
+type openTelescopeMsg struct {
+	teleType string
+}
+
 type saveSessionMsg struct {
 	path string
 }
