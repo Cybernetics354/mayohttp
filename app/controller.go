@@ -280,7 +280,7 @@ func (m *State) GetField(state string) any {
 		return &m.saveInput
 	}
 
-	return &m.url
+	return nil
 }
 
 func (m *State) GetFocusedField() any {
