@@ -12,11 +12,34 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+func (m *State) CopyToClipboard() (tea.Model, tea.Cmd) {
+	var val string
+	switch m.state {
+	case STATE_FOCUS_URL:
+		val = m.url.Value()
+	case STATE_FOCUS_PIPE:
+		val = m.pipe.Value()
+	case STATE_FOCUS_PIPEDRESP:
+		val = m.pipedresp.Value()
+	}
+
+	err := clipboard.WriteAll(val)
+	if err != nil {
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Error copying to clipboard")),
+		)
+	}
+	return m, sendMsg(setActivityMsg("Copied to clipboard"))
+}
 
 func (m *State) Setup() (tea.Model, tea.Cmd) {
 	// check whether the config folder exists
