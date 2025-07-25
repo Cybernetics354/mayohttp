@@ -13,6 +13,7 @@ type homeKeymap struct {
 	Save,
 	SaveAs,
 	OpenSession,
+	CopyToClipboard,
 	Keybinding key.Binding
 }
 
@@ -43,6 +44,10 @@ func (k *homeKeymap) KeybindingHelp() []key.Binding {
 }
 
 var homeMapping = homeKeymap{
+	CopyToClipboard: key.NewBinding(
+		key.WithKeys("ctrl+y"),
+		key.WithHelp("<c-y>", "Copy current focused text field to clipboard"),
+	),
 	Run: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "Run"),
