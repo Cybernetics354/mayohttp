@@ -14,6 +14,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	if slices.Contains(homeLayout, m.state) {
 		switch {
+		case key.Matches(msg, homeMapping.CopyToClipboard):
+			return m, sendMsg(copyToClipboardMsg{})
 		case key.Matches(msg, homeMapping.Open):
 			return m, sendMsg(openEditorMsg{state: m.state})
 		case key.Matches(msg, homeMapping.Keybinding):

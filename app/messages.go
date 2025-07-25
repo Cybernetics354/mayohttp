@@ -91,6 +91,8 @@ type pipeResultMsg struct {
 	res string
 }
 
+type copyToClipboardMsg struct{}
+
 type refreshSelectEnvMsg struct{}
 
 type selectEnvMsg struct{}

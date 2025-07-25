@@ -86,6 +86,8 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.activity = string(msg)
 	case setFieldValueMsg:
 		return m.SetFieldValue(msg)
+	case copyToClipboardMsg:
+		return m.CopyToClipboard()
 	case errMsg:
 		return m.HandleErrorMsg(msg)
 	}
