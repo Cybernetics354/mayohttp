@@ -12,19 +12,13 @@ import (
 func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
-	if m.state == STATE_TELESCOPE {
-		if key.Matches(msg, homeMapping.Quit) {
-			return m, sendMsg(popStackMsg{})
-		}
-
-		m.telescope, cmd = m.telescope.Update(msg)
-		return m, cmd
-	}
-
 	if slices.Contains(homeLayout, m.state) {
 		switch {
 		case key.Matches(msg, homeMapping.QuickAccess):
 			return m, sendMsg(openTelescopeMsg{teleType: TELESCOPE_QUICK_ACCESS})
+		case key.Matches(msg, homeMapping.ComposeUrl):
+			m.urlcompose.SetUrl(m.url.Value())
+			return m, sendMsg(addStackMsg{state: STATE_URL_COMPOSE})
 		case key.Matches(msg, homeMapping.CopyToClipboard):
 			return m, sendMsg(copyToClipboardMsg{})
 		case key.Matches(msg, homeMapping.OpenEnv):
@@ -84,6 +78,10 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch m.state {
 	case STATE_FOCUS_PIPE:
 		m.pipe, cmd = m.pipe.Update(msg)
+	case STATE_TELESCOPE:
+		m.telescope, cmd = m.telescope.Update(msg)
+	case STATE_URL_COMPOSE:
+		m.urlcompose, cmd = m.urlcompose.Update(msg)
 	case STATE_FOCUS_URL:
 		m.url, cmd = m.url.Update(msg)
 	case STATE_FOCUS_RESPONSE:
