@@ -10,6 +10,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+func (m *Model) SetWidth(width int) {
+	m.width = width
+	m.input.Width = width - 3
+}
+
 func (m Model) RunCommand() (Model, tea.Cmd) {
 	val := m.input.Value()
 	command := strings.SplitN(val, " ", 2)

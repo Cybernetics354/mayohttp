@@ -32,6 +32,7 @@ func (m *State) RefreshView() {
 	m.methodSelect.SetSize(w, h)
 
 	m.telescope.SetSize(clamp(w/2, 60, 90), clamp(h/4, 10, 30))
+	m.urlcompose.SetWidth(clamp(w/2, 60, 90))
 }
 
 func (m *State) Render() string {
