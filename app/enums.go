@@ -17,6 +17,7 @@ const (
 	STATE_SESSION_RENAME_INPUT  = "state_session_rename_input"
 	STATE_KEYBINDING_MODAL      = "state_keybinding_modal"
 	STATE_TELESCOPE             = "state_telescope"
+	STATE_URL_COMPOSE           = "state_url_compose"
 
 	COMMAND_OPEN_ENV          = "command_open_env"
 	COMMAND_CHANGE_ENV        = "command_change_env"
