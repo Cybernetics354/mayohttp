@@ -21,6 +21,7 @@ func (t *Model) Focus() {
 }
 
 func (t *Model) Clear() {
+	t.searchRegistry[t.teleType] = ""
 	t.search.SetValue("")
 }
 
