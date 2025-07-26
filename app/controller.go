@@ -61,6 +61,8 @@ func (m *State) SelectTelescopeItem(msg telescope.SubmitMsg) (tea.Model, tea.Cmd
 		if !ok {
 			return m, sendMsg(errMsg(errors.New("no method selected")))
 		}
+
+		m.telescope.Clear()
 		m.method = val
 		m.url.Prompt = val + " | "
 		m.url.Width = m.sw - 5 - len(m.url.Prompt)
