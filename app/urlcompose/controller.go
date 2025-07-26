@@ -29,7 +29,7 @@ func (m Model) RunCommand() (Model, tea.Cmd) {
 		case "rm":
 			err = m.rm(arg)
 		case "cd":
-			err = m.cd(arg)
+			m.cd(arg)
 		}
 	}
 
@@ -169,7 +169,7 @@ func (m *Model) rm(arg string) error {
 	return nil
 }
 
-func (m *Model) cd(arg string) error {
+func (m *Model) cd(arg string) {
 	// if start with /, then reset the path first
 	if strings.HasPrefix(arg, "/") {
 		m.paths = []string{}
@@ -192,8 +192,6 @@ func (m *Model) cd(arg string) error {
 			continue
 		}
 	}
-
-	return nil
 }
 
 func (m *Model) set(command string) error {
