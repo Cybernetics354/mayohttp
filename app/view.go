@@ -105,25 +105,11 @@ func (m *State) RenderBase() string {
 	}
 }
 
-func (m *State) RenderTelescopeLayer() *ui.CompositeViewLayer {
-	layer := ui.NewCompositeViewLayer()
-	layer.SetView(m.telescope.View())
-	layer.SetPositionY(ui.CompositeLayerTop)
-	layer.SetOffset(0, m.sh/3)
-
-	return layer
-}
-
 func (m *State) GetOverlayLayers() []*ui.CompositeViewLayer {
 	var layers []*ui.CompositeViewLayer
 
 	for _, state := range m.stateStack {
 		if !slices.Contains(overlays, state) {
-			continue
-		}
-
-		if state == STATE_TELESCOPE {
-			layers = append(layers, m.RenderTelescopeLayer())
 			continue
 		}
 
@@ -133,6 +119,12 @@ func (m *State) GetOverlayLayers() []*ui.CompositeViewLayer {
 			layer.SetView(m.RenderKeybindings())
 		case STATE_SAVE_SESSION_INPUT, STATE_SESSION_RENAME_INPUT:
 			layer.SetView(m.RenderSessionInput())
+		case STATE_URL_COMPOSE:
+			layer.SetView(m.urlcompose.View())
+		case STATE_TELESCOPE:
+			layer.SetView(m.telescope.View())
+			layer.SetPositionY(ui.CompositeLayerTop)
+			layer.SetOffset(0, m.sh/3)
 		}
 
 		layers = append(layers, layer)
