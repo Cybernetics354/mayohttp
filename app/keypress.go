@@ -16,6 +16,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, homeMapping.Open):
 			return m, sendMsg(openEditorMsg{state: m.state})
+		case key.Matches(msg, homeMapping.Keybinding):
+			return m, sendMsg(addStackMsg{state: STATE_KEYBINDING_MODAL})
 		case key.Matches(msg, homeMapping.Commands):
 			return m, sendMsg(addStackMsg{state: STATE_COMMAND_PALLETE})
 		case key.Matches(msg, homeMapping.Method):
@@ -38,6 +40,11 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	switch {
+	case key.Matches(msg, homeMapping.Keybinding):
+		// if the keybinding modal is open, then close it
+		if m.state == STATE_KEYBINDING_MODAL {
+			return m, sendMsg(popStackMsg{})
+		}
 	case key.Matches(msg, homeMapping.Quit):
 		return m.Quit()
 	case key.Matches(msg, homeMapping.Run):
@@ -84,6 +91,7 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			switch {
 			case key.Matches(msg, saveListMapping.New):
 				m.saveInput.SetValue("")
+				m.saveInput.Prompt = "New Session Name"
 				return m, sendMsg(addStackMsg{state: STATE_SAVE_SESSION_INPUT})
 			}
 		}
@@ -96,6 +104,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				if !ok {
 					return m, sendMsg(errMsg(errors.New("no session selected")))
 				}
+
+				m.saveInput.Prompt = "Rename Session"
 				m.saveInput.SetValue(i.Title())
 
 				return m, sendMsg(addStackMsg{state: STATE_SESSION_RENAME_INPUT})
