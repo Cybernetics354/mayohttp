@@ -34,7 +34,5 @@ func New() Model {
 	m.input.ShowSuggestions = true
 	m.input.Width = m.width
 
-	m.SetUrl("https://swapi.tech/lorem?walang=gago")
-
 	return m
 }
