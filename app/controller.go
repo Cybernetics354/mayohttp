@@ -21,6 +21,20 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+func (m *State) ClearFocusedInput() (tea.Model, tea.Cmd) {
+	field := m.GetFocusedField()
+	if field == nil {
+		return m, nil
+	}
+
+	switch f := field.(type) {
+	case *textinput.Model:
+	  f.SetValue("")
+	}
+
+	return m, nil
+}
+
 func (m *State) OpenTelescope(msg openTelescopeMsg) (tea.Model, tea.Cmd) {
 	var items []list.Item
 	var title string

@@ -21,6 +21,8 @@ func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, sendMsg(addStackMsg{state: STATE_URL_COMPOSE})
 		case key.Matches(msg, homeMapping.CopyToClipboard):
 			return m, sendMsg(copyToClipboardMsg{})
+		case key.Matches(msg, homeMapping.ClearInput):
+		  return m.ClearFocusedInput()
 		case key.Matches(msg, homeMapping.OpenEnv):
 			return m, sendMsg(openEnvMsg{})
 		case key.Matches(msg, homeMapping.Open):

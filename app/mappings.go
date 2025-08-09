@@ -17,6 +17,7 @@ type homeKeymap struct {
 	OpenEnv,
 	QuickAccess,
 	ComposeUrl,
+	ClearInput,
 	Keybinding key.Binding
 }
 
@@ -37,6 +38,7 @@ func (k *homeKeymap) KeybindingHelp() []key.Binding {
 		k.ComposeUrl,
 		k.QuickAccess,
 		k.CopyToClipboard,
+		k.ClearInput,
 		k.Method,
 		k.Open,
 		k.Next,
@@ -51,6 +53,10 @@ func (k *homeKeymap) KeybindingHelp() []key.Binding {
 }
 
 var homeMapping = homeKeymap{
+	ClearInput: key.NewBinding(
+		key.WithKeys("ctrl+d"),
+		key.WithHelp("<c-d>", "Clear focused input"),
+	),
 	ComposeUrl: key.NewBinding(
 		key.WithKeys("ctrl+u"),
 		key.WithHelp("<c-u>", "Open URL composer"),
