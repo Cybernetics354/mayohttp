@@ -29,7 +29,7 @@ func (m *State) ClearFocusedInput() (tea.Model, tea.Cmd) {
 
 	switch f := field.(type) {
 	case *textinput.Model:
-	  f.SetValue("")
+		f.SetValue("")
 	}
 
 	return m, nil
