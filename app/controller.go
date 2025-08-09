@@ -56,10 +56,9 @@ func (m *State) OpenTelescope(msg openTelescopeMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *State) SelectTelescopeItem(msg telescope.SubmitMsg) (tea.Model, tea.Cmd) {
-	val := msg.Value.Value()
 	switch msg.TeleType {
 	case TELESCOPE_QUICK_ACCESS:
-		val, ok := val.([]tea.Msg)
+		val, ok := msg.Value.Value().([]tea.Msg)
 		if !ok {
 			return m, sendMsg(errMsg(errors.New("no menu selected")))
 		}
@@ -71,7 +70,7 @@ func (m *State) SelectTelescopeItem(msg telescope.SubmitMsg) (tea.Model, tea.Cmd
 
 		return m, tea.Sequence(sendMsg(popStackMsg{}), tea.Batch(cmds...))
 	case TELESCOPE_METHOD_PALLETE:
-		val, ok := val.(string)
+		val, ok := msg.Value.Value().(string)
 		if !ok {
 			return m, sendMsg(errMsg(errors.New("no method selected")))
 		}

@@ -15,7 +15,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.list, cmd = m.list.Update(tea.KeyMsg{Type: tea.KeyDown})
 			cmds = append(cmds, cmd)
 		case "ctrl+k", "up":
-			m.list, _ = m.list.Update(tea.KeyMsg{Type: tea.KeyUp})
+			m.list, cmd = m.list.Update(tea.KeyMsg{Type: tea.KeyUp})
 			cmds = append(cmds, cmd)
 		case "ctrl+d":
 			m.Clear()

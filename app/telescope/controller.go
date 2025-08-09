@@ -54,7 +54,7 @@ func (t *Model) SetSize(width, height int) {
 	t.RefreshRender()
 }
 
-func (t *Model) SetTeleType(teleType any) {
+func (t *Model) SetTeleType(teleType string) {
 	if t.teleType != teleType {
 		t.search.SetValue(t.searchRegistry[teleType])
 	}

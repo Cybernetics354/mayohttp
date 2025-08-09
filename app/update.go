@@ -103,6 +103,10 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case urlcompose.Error:
 		return m, sendMsg(errMsg(errors.New(string(msg))))
 	case errMsg:
+		if err, ok := any(msg).(error); ok {
+			return m, sendMsg(errMsg(err))
+		}
+
 		return m.HandleErrorMsg(msg)
 	}
 

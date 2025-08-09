@@ -50,7 +50,7 @@ func NewListDelegate() ListDelegate {
 	return ListDelegate{
 		tile:      ListItemStyle,
 		focusTile: FocusListItemStyle,
-		height:    0,
+		height:    1,
 		spacing:   0,
 		onUpdate:  nil,
 	}
@@ -82,11 +82,11 @@ func (d ListDelegate) SetOnUpdate(onUpdate func(msg tea.Msg, m *list.Model) tea.
 }
 
 func (d ListDelegate) Height() int {
-	return 1
+	return d.height
 }
 
 func (d ListDelegate) Spacing() int {
-	return 0
+	return d.spacing
 }
 
 func (d ListDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
