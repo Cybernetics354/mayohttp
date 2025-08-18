@@ -8,6 +8,10 @@ type errMsg error
 
 type checkEnvFileMsg struct{}
 
+type openTelescopeMsg struct {
+	teleType string
+}
+
 type saveSessionMsg struct {
 	path string
 }
@@ -90,6 +94,8 @@ type pipeResultMsg struct {
 	err error
 	res string
 }
+
+type copyToClipboardMsg struct{}
 
 type refreshSelectEnvMsg struct{}
 

@@ -30,6 +30,9 @@ func (m *State) RefreshView() {
 	m.envList.SetSize(ui.ListWidth, lh)
 	m.sessionList.SetSize(ui.ListWidth, lh)
 	m.methodSelect.SetSize(w, h)
+
+	m.telescope.SetSize(clamp(w/2, 60, 90), clamp(h/4, 10, 30))
+	m.urlcompose.SetWidth(clamp(w/2, 60, 90))
 }
 
 func (m *State) Render() string {
@@ -117,6 +120,12 @@ func (m *State) GetOverlayLayers() []*ui.CompositeViewLayer {
 			layer.SetView(m.RenderKeybindings())
 		case STATE_SAVE_SESSION_INPUT, STATE_SESSION_RENAME_INPUT:
 			layer.SetView(m.RenderSessionInput())
+		case STATE_URL_COMPOSE:
+			layer.SetView(m.urlcompose.View())
+		case STATE_TELESCOPE:
+			layer.SetView(m.telescope.View())
+			layer.SetPositionY(ui.CompositeLayerTop)
+			layer.SetOffset(0, m.sh/3)
 		}
 
 		layers = append(layers, layer)

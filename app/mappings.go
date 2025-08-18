@@ -13,6 +13,11 @@ type homeKeymap struct {
 	Save,
 	SaveAs,
 	OpenSession,
+	CopyToClipboard,
+	OpenEnv,
+	QuickAccess,
+	ComposeUrl,
+	ClearInput,
 	Keybinding key.Binding
 }
 
@@ -30,11 +35,16 @@ func (k homeKeymap) FullHelp() [][]key.Binding {
 func (k *homeKeymap) KeybindingHelp() []key.Binding {
 	return []key.Binding{
 		k.Run,
+		k.ComposeUrl,
+		k.QuickAccess,
+		k.CopyToClipboard,
+		k.ClearInput,
 		k.Method,
 		k.Open,
 		k.Next,
 		k.Back,
 		k.Commands,
+		k.OpenEnv,
 		k.Save,
 		k.OpenSession,
 		k.Quit,
@@ -43,13 +53,33 @@ func (k *homeKeymap) KeybindingHelp() []key.Binding {
 }
 
 var homeMapping = homeKeymap{
+	ClearInput: key.NewBinding(
+		key.WithKeys("ctrl+d"),
+		key.WithHelp("<c-d>", "Clear focused input"),
+	),
+	ComposeUrl: key.NewBinding(
+		key.WithKeys("ctrl+u"),
+		key.WithHelp("<c-u>", "Open URL composer"),
+	),
+	QuickAccess: key.NewBinding(
+		key.WithKeys("ctrl+j"),
+		key.WithHelp("<c-j>", "Open quick access menu"),
+	),
+	OpenEnv: key.NewBinding(
+		key.WithKeys("ctrl+e"),
+		key.WithHelp("<c-e>", "Open ENV on default editor ($EDITOR)"),
+	),
+	CopyToClipboard: key.NewBinding(
+		key.WithKeys("ctrl+y"),
+		key.WithHelp("<c-y>", "Copy current focused text field to clipboard"),
+	),
 	Run: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "Run"),
 	),
 	Method: key.NewBinding(
-		key.WithKeys("ctrl+j"),
-		key.WithHelp("<c-j>", "Select Request Method (GET, POST, PUT, DELETE, OPTIONS, PATCH)"),
+		key.WithKeys("ctrl+k"),
+		key.WithHelp("<c-k>", "Select Request Method (GET, POST, PUT, DELETE, OPTIONS, PATCH)"),
 	),
 	Open: key.NewBinding(
 		key.WithKeys("ctrl+o"),

@@ -1,7 +1,9 @@
 package app
 
 import (
+	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/Cybernetics354/mayohttp/app/ui"
+	"github.com/Cybernetics354/mayohttp/app/urlcompose"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -18,6 +20,8 @@ type State struct {
 	pipeResSub   chan pipeResultMsg
 	commands     list.Model
 	sessionList  list.Model
+	telescope    telescope.Model
+	urlcompose   urlcompose.Model
 	url          textinput.Model
 	response     textarea.Model
 	body         textarea.Model
@@ -45,6 +49,8 @@ func InitialModel() State {
 		pipeResSub:   make(chan pipeResultMsg),
 		commands:     ui.CommandList(commandPalletes),
 		sessionList:  ui.SessionList(),
+		telescope:    telescope.New(),
+		urlcompose:   urlcompose.New(),
 		methodSelect: ui.SelectMethod(methodPalletes),
 		body:         ui.BodyTextarea(),
 		header:       ui.HeaderTextarea(),

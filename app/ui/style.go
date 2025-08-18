@@ -3,9 +3,12 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	BorderStyle = lipgloss.RoundedBorder()
-	FocusColor  = lipgloss.Color("205")
-	BlurColor   = lipgloss.Color("243")
+	BorderStyle           = lipgloss.RoundedBorder()
+	FocusColor            = lipgloss.Color("205")
+	FocusForegroundColor  = lipgloss.Color("235")
+	AccentColor           = lipgloss.Color("121")
+	AccentForegroundColor = lipgloss.Color("239")
+	BlurColor             = lipgloss.Color("243")
 
 	ListWidth              = 35
 	ListPreviewWidthMargin = ListWidth + 5
@@ -36,4 +39,7 @@ var (
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(FocusColor).
 				Padding(0, 1)
+
+	ListItemStyle      = lipgloss.NewStyle()
+	FocusListItemStyle = ListItemStyle.Background(AccentColor).Foreground(AccentForegroundColor)
 )

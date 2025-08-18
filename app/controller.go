@@ -12,11 +12,98 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Cybernetics354/mayohttp/app/telescope"
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+func (m *State) ClearFocusedInput() (tea.Model, tea.Cmd) {
+	field := m.GetFocusedField()
+	if field == nil {
+		return m, nil
+	}
+
+	switch f := field.(type) {
+	case *textinput.Model:
+		f.SetValue("")
+	}
+
+	return m, nil
+}
+
+func (m *State) OpenTelescope(msg openTelescopeMsg) (tea.Model, tea.Cmd) {
+	var items []list.Item
+	var title string
+
+	switch msg.teleType {
+	case TELESCOPE_METHOD_PALLETE:
+		items = methodPalletesTelescope
+		title = "Select Method"
+	case TELESCOPE_QUICK_ACCESS:
+		items = quickAccess
+		title = "Quick Access"
+	}
+
+	m.telescope.SetList(items)
+	m.telescope.SetTitle(title)
+	m.telescope.SetTeleType(msg.teleType)
+
+	return m, sendMsg(addStackMsg{state: STATE_TELESCOPE})
+}
+
+func (m *State) SelectTelescopeItem(msg telescope.SubmitMsg) (tea.Model, tea.Cmd) {
+	switch msg.TeleType {
+	case TELESCOPE_QUICK_ACCESS:
+		val, ok := msg.Value.Value().([]tea.Msg)
+		if !ok {
+			return m, sendMsg(errMsg(errors.New("no menu selected")))
+		}
+
+		var cmds []tea.Cmd
+		for _, msg := range val {
+			cmds = append(cmds, sendMsg(msg))
+		}
+
+		return m, tea.Sequence(sendMsg(popStackMsg{}), tea.Batch(cmds...))
+	case TELESCOPE_METHOD_PALLETE:
+		val, ok := msg.Value.Value().(string)
+		if !ok {
+			return m, sendMsg(errMsg(errors.New("no method selected")))
+		}
+
+		m.telescope.Clear()
+		m.method = val
+		m.url.Prompt = val + " | "
+		m.url.Width = m.sw - 5 - len(m.url.Prompt)
+	}
+
+	return m, sendMsg(popStackMsg{})
+}
+
+func (m *State) CopyToClipboard() (tea.Model, tea.Cmd) {
+	var val string
+	switch m.state {
+	case STATE_FOCUS_URL:
+		val = m.url.Value()
+	case STATE_FOCUS_PIPE:
+		val = m.pipe.Value()
+	case STATE_FOCUS_PIPEDRESP:
+		val = m.pipedresp.Value()
+	}
+
+	err := clipboard.WriteAll(val)
+	if err != nil {
+		return m, tea.Batch(
+			sendMsg(errMsg(err)),
+			sendMsg(setActivityMsg("Error copying to clipboard")),
+		)
+	}
+	return m, sendMsg(setActivityMsg("Copied to clipboard"))
+}
 
 func (m *State) Setup() (tea.Model, tea.Cmd) {
 	// check whether the config folder exists
@@ -257,7 +344,7 @@ func (m *State) GetField(state string) any {
 		return &m.saveInput
 	}
 
-	return &m.url
+	return nil
 }
 
 func (m *State) GetFocusedField() any {
@@ -522,7 +609,7 @@ func (m *State) RunCommand(command runCommandMsg) (tea.Model, tea.Cmd) {
 	case COMMAND_OPEN_ENV:
 		return m, sendMsg(openEnvMsg{})
 	case COMMAND_SELECT_METHOD:
-		return m, sendMsg(addStackMsg{state: STATE_METHOD_PALLETE})
+		return m, sendMsg(openTelescopeMsg{teleType: TELESCOPE_METHOD_PALLETE})
 	case COMMAND_OPEN_BODY:
 		return m, sendMsg(openRequestBodyMsg{})
 	case COMMAND_OPEN_HEADER:
