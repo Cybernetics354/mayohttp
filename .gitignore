@@ -5,3 +5,6 @@ dist/
 build
 .env*
 *.log
+
+.gemini
+.venv
