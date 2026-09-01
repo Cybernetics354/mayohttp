@@ -254,7 +254,6 @@ func (m *State) Request() tea.Msg {
 		}
 		return nil
 	}
-
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
@@ -267,15 +266,11 @@ func (m *State) Request() tea.Msg {
 	}
 
 	var resBuffer bytes.Buffer
-	resBuffer.WriteString(header.str + "\n")
-	resBuffer.WriteString(responseSeparator + "\n")
-	resBuffer.WriteString(body.str + "\n")
-	resBuffer.WriteString(responseSeparator + "\n")
+	fmt.Fprintln(&resBuffer, header.str, responseSeparator, body.str, responseSeparator)
 	for k, v := range resp.Header {
-		resBuffer.WriteString(fmt.Sprintf("%s: %s\n", k, v))
+		fmt.Fprintf(&resBuffer, "%s: %s\n", k, v)
 	}
-	resBuffer.WriteString(responseSeparator + "\n")
-	resBuffer.WriteString(string(bodyBytes) + "\n")
+	fmt.Fprintln(&resBuffer, responseSeparator, string(bodyBytes))
 
 	m.resSub <- requestResultMsg{res: resBuffer.String()}
 	return nil
