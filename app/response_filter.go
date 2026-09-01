@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Cybernetics354/mayohttp/app/ui"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/Cybernetics354/mayohttp/app/ui"
 )
 
 var (

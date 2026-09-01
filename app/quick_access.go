@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/Cybernetics354/mayohttp/app/ui"
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	"github.com/Cybernetics354/mayohttp/app/ui"
 )
 
 var quickAccess = []list.Item{

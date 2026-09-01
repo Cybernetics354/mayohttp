@@ -3,11 +3,11 @@ package app
 import (
 	"errors"
 
-	"github.com/Cybernetics354/mayohttp/app/telescope"
-	"github.com/Cybernetics354/mayohttp/app/urlcompose"
 	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
+	"github.com/Cybernetics354/mayohttp/app/telescope"
+	"github.com/Cybernetics354/mayohttp/app/urlcompose"
 )
 
 func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
