@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/Cybernetics354/mayohttp/app/ui"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 var (
@@ -91,14 +91,14 @@ func (r *ResponseFilter) Render() string {
 	return strings.Join(strList, " • ")
 }
 
-func (r *ResponseFilter) HandleKeyPress(msg tea.KeyMsg) (ResponseFilter, tea.Cmd) {
+func (r *ResponseFilter) HandleKeyPress(msg tea.KeyPressMsg) (ResponseFilter, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg.String() {
 	case "h", "left":
 		r.Prev()
 	case "l", "right":
 		r.Next()
-	case " ":
+	case "space":
 		r.Toggle()
 		cmd = sendMsg(runPipeMsg{})
 	}

@@ -1,14 +1,15 @@
 package app
 
 import (
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/textarea"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/bubbles/v2/viewport"
 	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/Cybernetics354/mayohttp/app/ui"
 	"github.com/Cybernetics354/mayohttp/app/urlcompose"
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/textinput"
 )
 
 type State struct {
@@ -28,7 +29,7 @@ type State struct {
 	header       textarea.Model
 	pipe         textinput.Model
 	saveInput    textinput.Model
-	pipedresp    textarea.Model
+	pipedresp    viewport.Model
 	spinner      spinner.Model
 	resFilter    ResponseFilter
 	showSpinner  bool
@@ -58,7 +59,7 @@ func InitialModel() State {
 		pipe:         ui.PipeInput(),
 		saveInput:    ui.SaveInput(),
 		response:     ui.ResponseTextarea(),
-		pipedresp:    ui.PipedResponseTextarea(),
+		pipedresp:    ui.PipedResponseViewport(),
 		spinner:      ui.Spinner(),
 		envList:      ui.EnvList(),
 		resFilter:    CreateResponseFilter(),

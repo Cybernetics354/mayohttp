@@ -5,13 +5,17 @@ import (
 	"math"
 	"slices"
 
+	"charm.land/bubbles/v2/help"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/Cybernetics354/mayohttp/app/ui"
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/lipgloss"
 )
 
-func (m State) View() string {
-	return m.Render()
+func (m State) View() tea.View {
+	v := tea.NewView(m.Render())
+	v.AltScreen = true
+	v.WindowTitle = "MayoHTTP"
+	return v
 }
 
 func (m *State) RefreshView() {
@@ -19,13 +23,16 @@ func (m *State) RefreshView() {
 
 	lh := h - 1
 
-	m.help.Width = w
-	m.url.Width = w - 5 - len(m.url.Prompt)
-	m.pipe.Width = w - 11
+	m.help.SetWidth(w)
+	m.url.SetWidth(w - 5 - len(m.url.Prompt))
+	m.pipe.SetWidth(w - 11)
+
 	m.response.SetWidth(w)
 	m.response.SetHeight(h - 10)
-	m.pipedresp.SetWidth(w)
-	m.pipedresp.SetHeight(h - 9)
+
+	m.pipedresp.SetWidth(w - 2)
+	m.pipedresp.SetHeight(h - 10)
+
 	m.commands.SetSize(ui.ListWidth, lh)
 	m.envList.SetSize(ui.ListWidth, lh)
 	m.sessionList.SetSize(ui.ListWidth, lh)
@@ -333,7 +340,16 @@ func (m *State) RenderResponse() string {
 }
 
 func (m *State) RenderPipedResponse() string {
-	return m.pipedresp.View()
+	color := ui.BlurColor
+	if m.state == STATE_FOCUS_PIPEDRESP {
+		color = ui.FocusColor
+	}
+
+	base := lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(color)
+
+	return base.Render(m.pipedresp.View())
 }
 
 func (m *State) RenderSpinner() string {

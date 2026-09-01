@@ -1,6 +1,6 @@
 package ui
 
-import "github.com/charmbracelet/bubbles/list"
+import "charm.land/bubbles/v2/list"
 
 func SelectMethod(items []list.Item) list.Model {
 	i := list.New(items, list.NewDefaultDelegate(), 0, 0)

@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 )
 
 func (m *Model) SetWidth(width int) {
 	m.width = width
-	m.input.Width = width - 3
+	m.input.SetWidth(width - 3)
 }
 
 func (m Model) RunCommand() (Model, tea.Cmd) {

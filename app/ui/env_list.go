@@ -1,6 +1,6 @@
 package ui
 
-import "github.com/charmbracelet/bubbles/list"
+import "charm.land/bubbles/v2/list"
 
 func EnvList() list.Model {
 	i := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)

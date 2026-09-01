@@ -1,6 +1,6 @@
 package urlcompose
 
-import "github.com/charmbracelet/bubbles/textinput"
+import "charm.land/bubbles/v2/textinput"
 
 type Model struct {
 	/// cache the result of the url
@@ -32,7 +32,7 @@ func New() Model {
 
 	m.input.Focus()
 	m.input.ShowSuggestions = true
-	m.input.Width = m.width
+	m.input.SetWidth(m.width)
 
 	return m
 }

@@ -1,8 +1,8 @@
 package app
 
 import (
+	"charm.land/bubbles/v2/list"
 	"github.com/Cybernetics354/mayohttp/app/ui"
-	"github.com/charmbracelet/bubbles/list"
 )
 
 var methodPalletesTelescope = []list.Item{

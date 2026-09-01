@@ -4,12 +4,12 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/list"
+	tea "charm.land/bubbletea/v2"
 )
 
-func (m *State) HandleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *State) HandleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	if slices.Contains(homeLayout, m.state) {

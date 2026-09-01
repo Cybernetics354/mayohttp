@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/lipgloss/v2"
 	"github.com/Cybernetics354/mayohttp/app/ui"
-	"github.com/charmbracelet/lipgloss"
 )
 
 var container = lipgloss.NewStyle().

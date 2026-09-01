@@ -3,11 +3,11 @@ package app
 import (
 	"errors"
 
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
 	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/Cybernetics354/mayohttp/app/urlcompose"
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -32,7 +32,7 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinner, command = m.spinner.Update(msg)
 	case tea.WindowSizeMsg:
 		return m.HandleWindowChange(msg)
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		return m.HandleKeyPress(msg)
 	case recalculateComponentSizesMsg:
 		m.RefreshView()

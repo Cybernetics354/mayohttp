@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/Cybernetics354/mayohttp/app"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {

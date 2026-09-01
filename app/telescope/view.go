@@ -3,8 +3,8 @@ package telescope
 import (
 	"strings"
 
+	"charm.land/lipgloss/v2"
 	"github.com/Cybernetics354/mayohttp/app/ui"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func (m Model) View() string {
