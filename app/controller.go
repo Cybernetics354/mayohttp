@@ -269,11 +269,15 @@ func (m *State) Request() tea.Msg {
 	}
 
 	var resBuffer bytes.Buffer
-	fmt.Fprintln(&resBuffer, header.str, responseSeparator, body.str, responseSeparator)
+	fmt.Fprintln(&resBuffer, header.str)
+	fmt.Fprintln(&resBuffer, responseSeparator)
+	fmt.Fprintln(&resBuffer, body.str)
+	fmt.Fprintln(&resBuffer, responseSeparator)
 	for k, v := range resp.Header {
 		fmt.Fprintf(&resBuffer, "%s: %s\n", k, v)
 	}
-	fmt.Fprintln(&resBuffer, responseSeparator, string(bodyBytes))
+	fmt.Fprintln(&resBuffer, responseSeparator)
+	fmt.Fprintln(&resBuffer, string(bodyBytes))
 
 	m.resSub <- requestResultMsg{res: resBuffer.String()}
 	return nil
