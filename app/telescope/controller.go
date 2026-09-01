@@ -2,8 +2,8 @@ package telescope
 
 import (
 	"github.com/Cybernetics354/mayohttp/app/ui"
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/list"
+	tea "charm.land/bubbletea/v2"
 )
 
 func sendMsg(msg tea.Msg) tea.Cmd {
@@ -34,7 +34,7 @@ func (t *Model) Sync() {
 }
 
 func (t *Model) RefreshRender() {
-	t.search.Width = t.width - 3
+	t.search.SetWidth(t.width - 3)
 	t.list.SetSize(t.width, t.height)
 }
 

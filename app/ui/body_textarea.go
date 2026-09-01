@@ -1,6 +1,6 @@
 package ui
 
-import "github.com/charmbracelet/bubbles/textarea"
+import "charm.land/bubbles/v2/textarea"
 
 func BodyTextarea() textarea.Model {
 	i := textarea.New()

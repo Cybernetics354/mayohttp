@@ -1,15 +1,17 @@
 package ui
 
-import "github.com/charmbracelet/bubbles/textarea"
+import "charm.land/bubbles/v2/textarea"
 
 func ResponseTextarea() textarea.Model {
 	i := textarea.New()
 	i.ShowLineNumbers = true
 	i.Prompt = ""
-	i.FocusedStyle.Base = FocusTextarea
-	i.BlurredStyle.Base = BlurTextarea
-	i.FocusedStyle.LineNumber = FocusTextareaLineNumber
-	i.BlurredStyle.LineNumber = BlurTextareaLineNumber
+	styles := i.Styles()
+	styles.Focused.Base = FocusTextarea
+	styles.Blurred.Base = BlurTextarea
+	styles.Focused.LineNumber = FocusTextareaLineNumber
+	styles.Blurred.LineNumber = BlurTextareaLineNumber
+	i.SetStyles(styles)
 
 	return i
 }

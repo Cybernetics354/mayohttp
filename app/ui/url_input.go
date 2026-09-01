@@ -1,12 +1,15 @@
 package ui
 
-import "github.com/charmbracelet/bubbles/textinput"
+import "charm.land/bubbles/v2/textinput"
 
 func UrlInput(method string, initValue string) textinput.Model {
 	i := textinput.New()
 	i.SetValue(initValue)
 	i.Prompt = method + " | "
-	i.PromptStyle = UrlPromptStyle
+	s := i.Styles()
+	s.Focused.Prompt = UrlPromptStyle
+	s.Blurred.Prompt = UrlPromptStyle
+	i.SetStyles(s)
 
 	return i
 }

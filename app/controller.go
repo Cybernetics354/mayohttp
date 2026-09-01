@@ -12,13 +12,14 @@ import (
 	"slices"
 	"strings"
 
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textarea"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/bubbles/v2/viewport"
 	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/atotto/clipboard"
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/textinput"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 )
 
 func (m *State) ClearFocusedInput() (tea.Model, tea.Cmd) {
@@ -78,7 +79,7 @@ func (m *State) SelectTelescopeItem(msg telescope.SubmitMsg) (tea.Model, tea.Cmd
 		m.telescope.Clear()
 		m.method = val
 		m.url.Prompt = val + " | "
-		m.url.Width = m.sw - 5 - len(m.url.Prompt)
+		m.url.SetWidth(m.sw - 5 - len(m.url.Prompt))
 	}
 
 	return m, sendMsg(popStackMsg{})
@@ -92,7 +93,7 @@ func (m *State) CopyToClipboard() (tea.Model, tea.Cmd) {
 	case STATE_FOCUS_PIPE:
 		val = m.pipe.Value()
 	case STATE_FOCUS_PIPEDRESP:
-		val = m.pipedresp.Value()
+		val = m.pipedresp.GetContent()
 	}
 
 	err := clipboard.WriteAll(val)
@@ -157,7 +158,9 @@ func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *State) HandlePipeResult(msg pipeResultMsg) (tea.Model, tea.Cmd) {
-	m.pipedresp.SetValue(strings.TrimSpace(msg.res))
+	m.pipedresp.SetContent(strings.TrimSpace(msg.res))
+	m.pipedresp.SetXOffset(0)
+	m.pipedresp.SetYOffset(0)
 	return m, tea.Batch(
 		sendMsg(hideSpinnerMsg{}),
 		sendMsg(setActivityMsg("Piping complete")),
@@ -468,7 +471,7 @@ func (m *State) RefreshState() (tea.Model, tea.Cmd) {
 	m.url.Blur()
 	m.response.Blur()
 	m.pipe.Blur()
-	m.pipedresp.Blur()
+	// m.pipedresp.Blur()
 	m.body.Blur()
 	m.header.Blur()
 	m.resFilter.Blur()
@@ -493,6 +496,8 @@ func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 		str = f.Value()
 	case *textinput.Model:
 		str = f.Value()
+	case *viewport.Model:
+		str = f.GetContent()
 	default:
 		return m, nil
 	}
@@ -564,8 +569,8 @@ func (m *State) HideSpinner() (tea.Model, tea.Cmd) {
 func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 	if m.commands.FilterState() == list.Filtering {
 		var cmd tea.Cmd
-		m.commands, cmd = m.commands.Update(tea.KeyMsg{
-			Type: tea.KeyEnter,
+		m.commands, cmd = m.commands.Update(tea.KeyPressMsg{
+			Code: tea.KeyEnter,
 		})
 		return m, cmd
 	}
@@ -581,8 +586,8 @@ func (m *State) SelectCommandPallete() (tea.Model, tea.Cmd) {
 func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
 	if m.methodSelect.FilterState() == list.Filtering {
 		var cmd tea.Cmd
-		m.methodSelect, cmd = m.methodSelect.Update(tea.KeyMsg{
-			Type: tea.KeyEnter,
+		m.methodSelect, cmd = m.methodSelect.Update(tea.KeyPressMsg{
+			Code: tea.KeyEnter,
 		})
 		return m, cmd
 	}
@@ -594,7 +599,7 @@ func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
 
 	m.method = i.method
 	m.url.Prompt = i.method + " | "
-	m.url.Width = m.sw - 5 - len(m.url.Prompt)
+	m.url.SetWidth(m.sw - 5 - len(m.url.Prompt))
 
 	return m, sendMsg(popStackMsg{})
 }
@@ -751,8 +756,8 @@ func (m *State) OpenRequestHeader() (tea.Model, tea.Cmd) {
 func (m *State) SelectEnv() (tea.Model, tea.Cmd) {
 	if m.envList.FilterState() == list.Filtering {
 		var cmd tea.Cmd
-		m.envList, cmd = m.envList.Update(tea.KeyMsg{
-			Type: tea.KeyEnter,
+		m.envList, cmd = m.envList.Update(tea.KeyPressMsg{
+			Code: tea.KeyEnter,
 		})
 		return m, cmd
 	}
@@ -804,8 +809,8 @@ func (m *State) DeleteSessionItem() (tea.Model, tea.Cmd) {
 func (m *State) SelectSessionItem() (tea.Model, tea.Cmd) {
 	if m.sessionList.FilterState() == list.Filtering {
 		var cmd tea.Cmd
-		m.sessionList, cmd = m.sessionList.Update(tea.KeyMsg{
-			Type: tea.KeyEnter,
+		m.sessionList, cmd = m.sessionList.Update(tea.KeyPressMsg{
+			Code: tea.KeyEnter,
 		})
 		return m, cmd
 	}

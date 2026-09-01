@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/Cybernetics354/mayohttp/app/ui"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 )
 
 func (m Model) View() string {

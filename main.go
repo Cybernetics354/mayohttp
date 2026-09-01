@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/Cybernetics354/mayohttp/app"
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 )
 
 func main() {

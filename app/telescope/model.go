@@ -2,8 +2,8 @@ package telescope
 
 import (
 	"github.com/Cybernetics354/mayohttp/app/ui"
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textinput"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textinput"
 )
 
 type Model struct {
