@@ -6,6 +6,7 @@ import (
 	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
+	"github.com/Cybernetics354/mayohttp/app/component"
 	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/Cybernetics354/mayohttp/app/urlcompose"
 )
@@ -70,7 +71,7 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.RefreshState()
 	case runRequestMsg:
 		return m.RunRequest()
-	case runPipeMsg:
+	case runPipeMsg, component.ResponseFilterToggleMsg:
 		return m.RunPipe()
 	case requestResultMsg:
 		return m.HandleRequestResult(msg)

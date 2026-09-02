@@ -4,18 +4,20 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+
+	"github.com/Cybernetics354/mayohttp/app/component"
 )
 
 type Session struct {
-	Name          string         `json:"name"`
-	Url           string         `json:"url"`
-	Pipe          string         `json:"pipe"`
-	PipedResponse string         `json:"piped_response"`
-	Method        string         `json:"method"`
-	Response      string         `json:"response"`
-	Header        string         `json:"header"`
-	Body          string         `json:"body"`
-	ResFilter     ResponseFilter `json:"res_filter"`
+	Name          string                   `json:"name"`
+	Url           string                   `json:"url"`
+	Pipe          string                   `json:"pipe"`
+	PipedResponse string                   `json:"piped_response"`
+	Method        string                   `json:"method"`
+	Response      string                   `json:"response"`
+	Header        string                   `json:"header"`
+	Body          string                   `json:"body"`
+	ResFilter     component.ResponseFilter `json:"res_filter"`
 }
 
 func createSessionFromState(s *State) *Session {

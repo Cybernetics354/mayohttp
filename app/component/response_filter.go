@@ -1,4 +1,4 @@
-package app
+package component
 
 import (
 	"fmt"
@@ -14,6 +14,8 @@ var (
 	blurResponseFilter  = lipgloss.NewStyle().Foreground(ui.BlurColor)
 )
 
+type ResponseFilterToggleMsg struct{}
+
 type ResponseFilter struct {
 	ReqHeader     bool `json:"req_header,omitempty"`
 	ReqBody       bool `json:"req_body,omitempty"`
@@ -23,7 +25,7 @@ type ResponseFilter struct {
 	focus         bool
 }
 
-func CreateResponseFilter() ResponseFilter {
+func NewResponseFilter() ResponseFilter {
 	return ResponseFilter{
 		ReqHeader:     true,
 		ReqBody:       true,
@@ -81,7 +83,7 @@ func (r *ResponseFilter) Blur() {
 	r.focus = false
 }
 
-func (r *ResponseFilter) Render() string {
+func (r *ResponseFilter) View() string {
 	strList := []string{}
 
 	strList = append(strList, r.renderField("Req Header", r.ReqHeader, r.PositionIndex == 0))
@@ -101,14 +103,16 @@ func (r *ResponseFilter) HandleKeyPress(msg tea.KeyPressMsg) (ResponseFilter, te
 		r.Next()
 	case "space":
 		r.Toggle()
-		cmd = sendMsg(runPipeMsg{})
+		cmd = func() tea.Msg {
+			return ResponseFilterToggleMsg{}
+		}
 	}
 
 	return *r, cmd
 }
 
-func (r *ResponseFilter) Filter(str string) string {
-	list := strings.Split(str, responseSeparator)
+func (r *ResponseFilter) Filter(str string, separator string) string {
+	list := strings.Split(str, separator)
 	if len(list) != r.Length() {
 		return str
 	}
@@ -142,5 +146,5 @@ func (r *ResponseFilter) Filter(str string) string {
 		}
 	}
 
-	return strings.Join(filtered, responseSeparator)
+	return strings.Join(filtered, separator)
 }

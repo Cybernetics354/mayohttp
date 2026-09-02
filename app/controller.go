@@ -303,7 +303,7 @@ func (m *State) PipeRequest() tea.Msg {
 		return nil
 	}
 
-	resp = m.resFilter.Filter(resp)
+	resp = m.resFilter.Filter(resp, responseSeparator)
 	if pipe == "" {
 		m.pipeResSub <- pipeResultMsg{res: resp}
 		return nil

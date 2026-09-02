@@ -26,13 +26,13 @@ type State struct {
 	urlcompose   urlcompose.Model
 	url          component.UrlInput
 	pipe         component.PipeInput
+	resFilter    component.ResponseFilter
 	response     textarea.Model
 	body         textarea.Model
 	header       textarea.Model
 	saveInput    textinput.Model
 	pipedresp    viewport.Model
 	spinner      spinner.Model
-	resFilter    ResponseFilter
 	showSpinner  bool
 	help         help.Model
 	keys         homeKeymap
@@ -58,12 +58,12 @@ func InitialModel() State {
 		header:       ui.HeaderTextarea(),
 		url:          component.NewUrlInput(REQUEST_METHOD_GET),
 		pipe:         component.NewPipeInput(),
+		resFilter:    component.NewResponseFilter(),
 		saveInput:    ui.SaveInput(),
 		response:     ui.ResponseTextarea(),
 		pipedresp:    ui.PipedResponseViewport(),
 		spinner:      ui.Spinner(),
 		envList:      ui.EnvList(),
-		resFilter:    CreateResponseFilter(),
 		showSpinner:  false,
 		help:         ui.Help(),
 		keys:         homeMapping,

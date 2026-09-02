@@ -96,9 +96,7 @@ func (m *State) RenderBase() string {
 			lipgloss.Top,
 			m.RenderURL(),
 			m.RenderPipe(),
-			lipgloss.NewStyle().PaddingLeft(1).Render(
-				m.resFilter.Render(),
-			),
+			m.RenderResponseFilter(),
 			m.RenderPipedResponse(),
 			lipgloss.JoinHorizontal(
 				lipgloss.Center,
@@ -321,6 +319,10 @@ func (m *State) RenderURL() string {
 
 func (m *State) RenderPipe() string {
 	return m.pipe.View()
+}
+
+func (m *State) RenderResponseFilter() string {
+	return lipgloss.NewStyle().PaddingLeft(1).Render(m.resFilter.View())
 }
 
 func (m *State) RenderResponse() string {
