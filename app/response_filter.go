@@ -72,8 +72,9 @@ func (r *ResponseFilter) renderField(str string, active bool, focus bool) string
 	return blurResponseFilter.Render(fmt.Sprintf("%s %s", point, str))
 }
 
-func (r *ResponseFilter) Focus() {
+func (r *ResponseFilter) Focus() tea.Cmd {
 	r.focus = true
+	return nil
 }
 
 func (r *ResponseFilter) Blur() {

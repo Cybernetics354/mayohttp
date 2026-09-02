@@ -24,8 +24,8 @@ func (m *State) RefreshView() {
 	lh := h - 1
 
 	m.help.SetWidth(w)
-	m.url.SetWidth(w - 5 - len(m.url.Prompt))
-	m.pipe.SetWidth(w - 11)
+	m.url.SetWidth(w)
+	m.pipe.SetWidth(w)
 
 	m.response.SetWidth(w)
 	m.response.SetHeight(h - 10)
@@ -316,23 +316,11 @@ func (m *State) RenderWithListHelp(mapping help.KeyMap, body string) string {
 }
 
 func (m *State) RenderURL() string {
-	c := m.url.View()
-
-	if m.state == STATE_FOCUS_URL {
-		return ui.FocusInputContainer.Render(c)
-	}
-
-	return ui.BlurInputContainer.Render(c)
+	return m.url.View()
 }
 
 func (m *State) RenderPipe() string {
-	c := m.pipe.View()
-
-	if m.state == STATE_FOCUS_PIPE {
-		return ui.FocusInputContainer.Render(c)
-	}
-
-	return ui.BlurInputContainer.Render(c)
+	return m.pipe.View()
 }
 
 func (m *State) RenderResponse() string {

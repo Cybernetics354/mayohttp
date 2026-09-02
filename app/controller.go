@@ -15,7 +15,7 @@ import (
 	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
-	"charm.land/bubbles/v2/viewport"
+	"github.com/Cybernetics354/mayohttp/app/intf"
 	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/atotto/clipboard"
 
@@ -28,6 +28,11 @@ func (m *State) ClearFocusedInput() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	if f, ok := field.(intf.IClearable); ok {
+		f.Clear()
+	}
+
+	// TODO :: remove this once the all fields is abstracted
 	switch f := field.(type) {
 	case *textinput.Model:
 		f.SetValue("")
@@ -78,8 +83,8 @@ func (m *State) SelectTelescopeItem(msg telescope.SubmitMsg) (tea.Model, tea.Cmd
 
 		m.telescope.Clear()
 		m.method = val
-		m.url.Prompt = val + " | "
-		m.url.SetWidth(m.sw - 5 - len(m.url.Prompt))
+		m.url.SetMethod(val)
+		m.url.SetWidth(m.sw)
 	}
 
 	return m, sendMsg(popStackMsg{})
@@ -475,18 +480,12 @@ func (m *State) RefreshState() (tea.Model, tea.Cmd) {
 	m.url.Blur()
 	m.response.Blur()
 	m.pipe.Blur()
-	// m.pipedresp.Blur()
 	m.body.Blur()
 	m.header.Blur()
 	m.resFilter.Blur()
 	m.saveInput.Blur()
 
-	switch f := m.GetFocusedField().(type) {
-	case *textarea.Model:
-		f.Focus()
-	case *textinput.Model:
-		f.Focus()
-	case *ResponseFilter:
+	if f, ok := m.GetFocusedField().(intf.IFocusable); ok {
 		f.Focus()
 	}
 
@@ -495,21 +494,15 @@ func (m *State) RefreshState() (tea.Model, tea.Cmd) {
 
 func (m *State) OpenEditor(msg openEditorMsg) (tea.Model, tea.Cmd) {
 	var str string
-	switch f := m.GetField(msg.state).(type) {
-	case *textarea.Model:
+	if f, ok := m.GetField(msg.state).(intf.IStringValue); ok {
 		str = f.Value()
-	case *textinput.Model:
-		str = f.Value()
-	case *viewport.Model:
-		str = f.GetContent()
-	default:
+	} else {
 		return m, nil
 	}
 
 	dir := filepath.Dir(tempFilePath)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.MkdirAll(dir, 0o755)
-		if err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return m, sendMsg(errMsg(err))
 		}
 	}
@@ -602,8 +595,8 @@ func (m *State) SelectMethodPallete() (tea.Model, tea.Cmd) {
 	}
 
 	m.method = i.method
-	m.url.Prompt = i.method + " | "
-	m.url.SetWidth(m.sw - 5 - len(m.url.Prompt))
+	m.url.SetMethod(i.method)
+	m.url.SetWidth(m.sw)
 
 	return m, sendMsg(popStackMsg{})
 }

@@ -7,6 +7,7 @@ import (
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
+	"github.com/Cybernetics354/mayohttp/app/component"
 	"github.com/Cybernetics354/mayohttp/app/telescope"
 	"github.com/Cybernetics354/mayohttp/app/ui"
 	"github.com/Cybernetics354/mayohttp/app/urlcompose"
@@ -23,11 +24,11 @@ type State struct {
 	sessionList  list.Model
 	telescope    telescope.Model
 	urlcompose   urlcompose.Model
-	url          textinput.Model
+	url          component.UrlInput
+	pipe         component.PipeInput
 	response     textarea.Model
 	body         textarea.Model
 	header       textarea.Model
-	pipe         textinput.Model
 	saveInput    textinput.Model
 	pipedresp    viewport.Model
 	spinner      spinner.Model
@@ -55,8 +56,8 @@ func InitialModel() State {
 		methodSelect: ui.SelectMethod(methodPalletes),
 		body:         ui.BodyTextarea(),
 		header:       ui.HeaderTextarea(),
-		url:          ui.UrlInput(REQUEST_METHOD_GET, ""),
-		pipe:         ui.PipeInput(),
+		url:          component.NewUrlInput(REQUEST_METHOD_GET),
+		pipe:         component.NewPipeInput(),
 		saveInput:    ui.SaveInput(),
 		response:     ui.ResponseTextarea(),
 		pipedresp:    ui.PipedResponseViewport(),

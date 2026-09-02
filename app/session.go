@@ -94,8 +94,8 @@ func (s *Session) Apply(m *State) *State {
 	m.body.SetValue(s.Body)
 	m.method = s.Method
 	m.resFilter = s.ResFilter
-	m.url.Prompt = m.method + " | "
-	m.url.SetWidth(m.sw - 5 - len(m.url.Prompt))
+	m.url.SetMethod(m.method)
+	m.url.SetWidth(m.sw)
 
 	return m
 }
