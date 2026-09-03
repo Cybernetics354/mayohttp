@@ -89,7 +89,7 @@ func (m *State) HandleKeyPress(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case STATE_FOCUS_RESPONSE:
 		m.response, cmd = m.response.Update(msg)
 	case STATE_FOCUS_PIPEDRESP:
-		m.pipedresp, cmd = m.pipedresp.Update(msg)
+		m.pipedResp, cmd = m.pipedResp.Update(msg)
 	case STATE_COMMAND_PALLETE:
 		m.commands, cmd = m.commands.Update(msg)
 	case STATE_METHOD_PALLETE:

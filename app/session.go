@@ -24,7 +24,7 @@ func createSessionFromState(s *State) *Session {
 	return &Session{
 		Url:           s.url.Value(),
 		Pipe:          s.pipe.Value(),
-		PipedResponse: s.pipedresp.GetContent(),
+		PipedResponse: s.pipedResp.GetContent(),
 		Method:        s.method,
 		Response:      s.response.Value(),
 		Header:        s.header.Value(),
@@ -88,9 +88,9 @@ func (s *Session) Save(path string) error {
 func (s *Session) Apply(m *State) *State {
 	m.url.SetValue(s.Url)
 	m.pipe.SetValue(s.Pipe)
-	m.pipedresp.SetContent(s.PipedResponse)
-	m.pipedresp.SetXOffset(0)
-	m.pipedresp.SetYOffset(0)
+	m.pipedResp.SetContent(s.PipedResponse)
+	m.pipedResp.SetXOffset(0)
+	m.pipedResp.SetYOffset(0)
 	m.response.SetValue(s.Response)
 	m.header.SetValue(s.Header)
 	m.body.SetValue(s.Body)

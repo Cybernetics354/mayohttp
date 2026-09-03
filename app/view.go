@@ -30,8 +30,8 @@ func (m *State) RefreshView() {
 	m.response.SetWidth(w)
 	m.response.SetHeight(h - 10)
 
-	m.pipedresp.SetWidth(w - 2)
-	m.pipedresp.SetHeight(h - 10)
+	m.pipedResp.SetWidth(w - 2)
+	m.pipedResp.SetHeight(h - 10)
 
 	m.commands.SetSize(ui.ListWidth, lh)
 	m.envList.SetSize(ui.ListWidth, lh)
@@ -339,7 +339,7 @@ func (m *State) RenderPipedResponse() string {
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(color)
 
-	return base.Render(m.pipedresp.View())
+	return base.Render(m.pipedResp.View())
 }
 
 func (m *State) RenderSpinner() string {

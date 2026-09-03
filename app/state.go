@@ -27,11 +27,11 @@ type State struct {
 	url          component.UrlInput
 	pipe         component.PipeInput
 	resFilter    component.ResponseFilter
+	pipedResp    viewport.Model
 	response     textarea.Model
 	body         textarea.Model
 	header       textarea.Model
 	saveInput    textinput.Model
-	pipedresp    viewport.Model
 	spinner      spinner.Model
 	showSpinner  bool
 	help         help.Model
@@ -61,7 +61,7 @@ func InitialModel() State {
 		resFilter:    component.NewResponseFilter(),
 		saveInput:    ui.SaveInput(),
 		response:     ui.ResponseTextarea(),
-		pipedresp:    ui.PipedResponseViewport(),
+		pipedResp:    ui.PipedResponseViewport(),
 		spinner:      ui.Spinner(),
 		envList:      ui.EnvList(),
 		showSpinner:  false,

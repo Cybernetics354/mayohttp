@@ -99,7 +99,7 @@ func (m *State) CopyToClipboard() (tea.Model, tea.Cmd) {
 	case STATE_FOCUS_PIPE:
 		val = m.pipe.Value()
 	case STATE_FOCUS_PIPEDRESP:
-		val = m.pipedresp.GetContent()
+		val = m.pipedResp.GetContent()
 	}
 
 	err := clipboard.WriteAll(val)
@@ -164,9 +164,9 @@ func (m *State) HandleRequestResult(msg requestResultMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m *State) HandlePipeResult(msg pipeResultMsg) (tea.Model, tea.Cmd) {
-	m.pipedresp.SetContent(strings.TrimSpace(msg.res))
-	m.pipedresp.SetXOffset(0)
-	m.pipedresp.SetYOffset(0)
+	m.pipedResp.SetContent(strings.TrimSpace(msg.res))
+	m.pipedResp.SetXOffset(0)
+	m.pipedResp.SetYOffset(0)
 	return m, tea.Batch(
 		sendMsg(hideSpinnerMsg{}),
 		sendMsg(setActivityMsg("Piping complete")),
@@ -337,7 +337,7 @@ func (m *State) GetField(state string) any {
 	case STATE_FOCUS_PIPE:
 		return &m.pipe
 	case STATE_FOCUS_PIPEDRESP:
-		return &m.pipedresp
+		return &m.pipedResp
 	case STATE_FOCUS_RESPONSE:
 		return &m.response
 	case STATE_FOCUS_BODY:
