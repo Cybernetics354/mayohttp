@@ -1,4 +1,4 @@
-package urlcompose
+package component
 
 import (
 	"errors"
@@ -7,15 +7,73 @@ import (
 	"strconv"
 	"strings"
 
+	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	"github.com/Cybernetics354/mayohttp/app/ui"
 )
 
-func (m *Model) SetWidth(width int) {
+type UrlCompose struct {
+	/// cache the result of the url
+	url string
+
+	paths    []string
+	queries  map[string]string
+	protocol string
+	input    textinput.Model
+
+	width int
+}
+
+type UrlComposeSubmitMsg struct {
+	Url string
+}
+
+func NewUrlCompose() UrlCompose {
+	m := UrlCompose{
+		url:      "",
+		paths:    []string{},
+		queries:  make(map[string]string),
+		protocol: "",
+		input:    textinput.New(),
+		width:    60,
+	}
+
+	m.input.Focus()
+	m.input.ShowSuggestions = true
+	m.input.SetWidth(m.width)
+
+	return m
+}
+
+func (m UrlCompose) Init() tea.Cmd {
+	return nil
+}
+
+func (m UrlCompose) Update(msg tea.Msg) (UrlCompose, tea.Cmd) {
+	var cmd tea.Cmd
+
+	m.input, cmd = m.input.Update(msg)
+
+	switch msg := msg.(type) {
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "enter":
+			m, cmd = m.RunCommand()
+		case "ctrl+d":
+			m.ClearInput()
+		}
+	}
+
+	return m, cmd
+}
+
+func (m *UrlCompose) SetWidth(width int) {
 	m.width = width
 	m.input.SetWidth(width - 3)
 }
 
-func (m Model) RunCommand() (Model, tea.Cmd) {
+func (m UrlCompose) RunCommand() (UrlCompose, tea.Cmd) {
 	val := m.input.Value()
 	command := strings.SplitN(val, " ", 2)
 	var err error
@@ -40,10 +98,10 @@ func (m Model) RunCommand() (Model, tea.Cmd) {
 	m.RefreshUrl()
 	m.ClearInput()
 
-	return m, sendMsg(Changed{Url: m.url})
+	return m, sendMsg(UrlComposeSubmitMsg{Url: m.url})
 }
 
-func (m *Model) ComposeSuggestions() {
+func (m *UrlCompose) ComposeSuggestions() {
 	suggestions := []string{
 		"cd",
 		"rm",
@@ -71,7 +129,7 @@ func (m *Model) ComposeSuggestions() {
 	m.input.SetSuggestions(suggestions)
 }
 
-func (m *Model) RefreshUrl() string {
+func (m *UrlCompose) RefreshUrl() string {
 	defer m.ComposeSuggestions()
 
 	protocol := m.protocol
@@ -95,11 +153,11 @@ func (m *Model) RefreshUrl() string {
 	return m.url
 }
 
-func (m *Model) ClearInput() {
+func (m *UrlCompose) ClearInput() {
 	m.input.SetValue("")
 }
 
-func (m *Model) SetUrl(url string) {
+func (m *UrlCompose) SetUrl(url string) {
 	defer m.ComposeSuggestions()
 
 	/// reset the properties
@@ -140,7 +198,7 @@ func (m *Model) SetUrl(url string) {
 	}
 }
 
-func (m *Model) rm(arg string) error {
+func (m *UrlCompose) rm(arg string) error {
 	// if not a number, then it should be a query param
 	// remove the key from the query
 	num, err := strconv.Atoi(arg)
@@ -169,7 +227,7 @@ func (m *Model) rm(arg string) error {
 	return nil
 }
 
-func (m *Model) cd(arg string) {
+func (m *UrlCompose) cd(arg string) {
 	// if start with /, then reset the path first
 	if strings.HasPrefix(arg, "/") {
 		m.paths = []string{}
@@ -194,7 +252,7 @@ func (m *Model) cd(arg string) {
 	}
 }
 
-func (m *Model) set(command string) error {
+func (m *UrlCompose) set(command string) error {
 	trimmed := strings.TrimSpace(command)
 	parts := strings.SplitN(trimmed, "=", 2)
 
@@ -227,4 +285,50 @@ func sendMsg(msg tea.Msg) tea.Cmd {
 	return func() tea.Msg {
 		return msg
 	}
+}
+
+func (m UrlCompose) Container() lipgloss.Style {
+	return lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(ui.FocusColor)
+}
+
+func (m UrlCompose) View() string {
+	return lipgloss.JoinVertical(
+		lipgloss.Top,
+		m.RenderUrl(),
+		m.RenderInput(),
+	)
+}
+
+func (m *UrlCompose) RenderUrl() string {
+	header := lipgloss.NewStyle().Padding(0, 1).Render("URL Result")
+	helperStyle := lipgloss.NewStyle().
+		Background(ui.FocusColor).
+		Align(lipgloss.Center)
+
+	var helper []string
+	if m.protocol != "" || len(m.paths) > 0 {
+		if m.protocol != "" {
+			comp := helperStyle.Width(len(m.protocol)).MarginRight(2).Render("0")
+			helper = append(helper, comp)
+		}
+
+		for i, path := range m.paths {
+			index := i + 1
+			comp := helperStyle.
+				Width(len(path)).
+				Render(fmt.Sprintf("%d", index))
+			helper = append(helper, comp)
+		}
+	}
+
+	view := m.Container().Width(m.width).
+		Render(lipgloss.JoinVertical(lipgloss.Left, m.url, strings.Join(helper, " ")))
+
+	return ui.RenderWithHeader(view, header)
+}
+
+func (m *UrlCompose) RenderInput() string {
+	return m.Container().Width(m.width).Render(m.input.View())
 }

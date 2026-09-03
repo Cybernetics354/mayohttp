@@ -8,7 +8,6 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/Cybernetics354/mayohttp/app/component"
 	"github.com/Cybernetics354/mayohttp/app/telescope"
-	"github.com/Cybernetics354/mayohttp/app/urlcompose"
 )
 
 func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -99,9 +98,9 @@ func (m State) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.SelectTelescopeItem(msg)
 	case telescope.ErrorMsg:
 		return m, sendMsg(errMsg(errors.New(string(msg))))
-	case urlcompose.Changed:
+	case component.UrlComposeSubmitMsg:
 		m.url.SetValue(msg.Url)
-	case urlcompose.Error:
+	case component.Error:
 		return m, sendMsg(errMsg(errors.New(string(msg))))
 	case errMsg:
 		if err, ok := any(msg).(error); ok {
