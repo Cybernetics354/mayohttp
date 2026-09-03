@@ -48,6 +48,17 @@ func (r *ResponseFilter) Prev() {
 	r.PositionIndex = max(r.PositionIndex-1, 0)
 }
 
+func (r *ResponseFilter) Clear() tea.Cmd {
+	r.ReqHeader = false
+	r.ReqBody = false
+	r.ResHeader = false
+	r.ResBody = false
+
+	return func() tea.Msg {
+		return ResponseFilterToggleMsg{}
+	}
+}
+
 func (r *ResponseFilter) Toggle() {
 	switch r.PositionIndex {
 	case 0:
