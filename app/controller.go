@@ -24,12 +24,13 @@ import (
 
 func (m *State) ClearFocusedInput() (tea.Model, tea.Cmd) {
 	field := m.GetFocusedField()
+	var cmd tea.Cmd
 	if field == nil {
 		return m, nil
 	}
 
 	if f, ok := field.(intf.IClearable); ok {
-		f.Clear()
+		cmd = f.Clear()
 	}
 
 	// TODO :: remove this once the all fields is abstracted
@@ -38,7 +39,7 @@ func (m *State) ClearFocusedInput() (tea.Model, tea.Cmd) {
 		f.SetValue("")
 	}
 
-	return m, nil
+	return m, cmd
 }
 
 func (m *State) OpenTelescope(msg openTelescopeMsg) (tea.Model, tea.Cmd) {
